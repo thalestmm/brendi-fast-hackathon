@@ -22,6 +22,6 @@ Tokens disponíveis para: OpenAI, Anthropic, Grok, Gemini
 - **Produtividade** → entregar um produto funcionando bem, com robustez, features, etc, na infra que precisar pra fazer isso rodar
 - Qualidade técnica do **código** → o quanto tem problemas de código complexo, sem seguir princípios de responsabilidade única, etc
     - Baixo cognitive loading: tem que ser fácil bater o olho na estrutura de pastas/arquivos/funções, saber o que está acontecendo e se achar no projeto
-    - Baixo overeginnering: abstrações enxutas e limpas, sem focar muito em edge cases do futuro → foco em tech simples pra produto funcional
-- Boa escolha de tecnologias e **arquitetura** escalável: o racional das decisões técnicas tem que ficar o mais clara possível, sem escolha por hype ou sem saber o porquê
+    - Baixo overengineering: abstrações enxutas e limpas, sem focar muito em edge cases do futuro → foco em tech simples pra produto funcional
+- Boa escolha de **tecnologias** e **arquitetura escalável**: o racional das decisões técnicas tem que ficar o mais clara possível, sem escolha por hype ou sem saber o porquê
 - Qualidade de construção do **produto** → o quanto o produto realmente é bom e encanta quem o utiliza
