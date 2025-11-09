@@ -47,6 +47,22 @@ class TopMenuItem(BaseModel):
     revenue: int
 
 
+class OrderStatusBreakdown(BaseModel):
+    """Orders grouped by status."""
+
+    status: str
+    orders: int
+    revenue: int
+
+
+class DeliveryAreaBreakdown(BaseModel):
+    """Top delivery areas."""
+
+    area: str
+    orders: int
+    revenue: int
+
+
 class OrderAnalyticsResponse(BaseModel):
     """Order analytics response."""
 
@@ -58,6 +74,8 @@ class OrderAnalyticsResponse(BaseModel):
     orders_by_hour: List[HourlyData]
     order_value_distribution: List[OrderValueBucket]
     top_menu_items: List[TopMenuItem]
+    orders_by_status: List[OrderStatusBreakdown]
+    top_delivery_areas: List[DeliveryAreaBreakdown]
     period: Dict[str, Optional[str]]
 
 

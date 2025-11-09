@@ -32,6 +32,18 @@ export interface TopMenuItem {
   revenue: number;
 }
 
+export interface OrderStatusBreakdown {
+  status: string;
+  orders: number;
+  revenue: number;
+}
+
+export interface DeliveryAreaBreakdown {
+  area: string;
+  orders: number;
+  revenue: number;
+}
+
 export interface OrderAnalyticsResponse {
   total_orders: number;
   total_revenue: number;
@@ -41,6 +53,8 @@ export interface OrderAnalyticsResponse {
   orders_by_hour: HourlyData[];
   order_value_distribution: OrderValueBucket[];
   top_menu_items: TopMenuItem[];
+  orders_by_status: OrderStatusBreakdown[];
+  top_delivery_areas: DeliveryAreaBreakdown[];
   period: {
     start: string | null;
     end: string | null;

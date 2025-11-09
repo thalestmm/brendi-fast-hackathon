@@ -164,20 +164,45 @@ async def get_order_analytics(
         for label, stats in bucket_stats.items()
     ]
 
-    # Top menu items
-    products_stmt = select(Order.products).where(and_(*base_filters))
-    products_result = await session.execute(products_stmt)
+    # Detailed per-order analysis
+    order_details_stmt = (
+        select(Order.products, Order.raw_data, Order.total_price).where(and_(*base_filters))
+    )
+    order_details_result = await session.execute(order_details_stmt)
     item_totals: Dict[str, Dict[str, int]] = {}
-    for record in products_result.scalars().all():
-        if not record:
-            continue
-        for product in record:
-            name = product.get("name") or "Item sem nome"
-            quantity = int(product.get("quantity") or 0)
-            price = int(product.get("price") or 0)
-            stats = item_totals.setdefault(name, {"orders": 0, "revenue": 0})
-            stats["orders"] += quantity
-            stats["revenue"] += quantity * price
+    status_totals: Dict[str, Dict[str, int]] = {}
+    area_totals: Dict[str, Dict[str, int]] = {}
+
+    for products, raw_data, total_price in order_details_result.all():
+        order_revenue = int(total_price or 0)
+
+        if products:
+            for product in products:
+                name = product.get("name") or "Item sem nome"
+                quantity = int(product.get("quantity") or 0)
+                price = int(product.get("price") or 0)
+                stats = item_totals.setdefault(name, {"orders": 0, "revenue": 0})
+                stats["orders"] += quantity
+                stats["revenue"] += quantity * price
+
+        payload = raw_data or {}
+        status_key = (payload.get("status") or "desconhecido").strip().lower()
+        status_label = status_key.title() if status_key not in {"", "desconhecido"} else "Desconhecido"
+        status_stats = status_totals.setdefault(status_label, {"orders": 0, "revenue": 0})
+        status_stats["orders"] += 1
+        status_stats["revenue"] += order_revenue
+
+        delivery_info = payload.get("delivery") or {}
+        address_info = delivery_info.get("address") or {}
+        neighborhood = (
+            address_info.get("neighborhood")
+            or address_info.get("geocoderNeighborhood")
+            or ""
+        ).strip()
+        neighborhood_label = neighborhood if neighborhood else "Não informado"
+        area_stats = area_totals.setdefault(neighborhood_label, {"orders": 0, "revenue": 0})
+        area_stats["orders"] += 1
+        area_stats["revenue"] += order_revenue
 
     top_menu_items = [
         {
@@ -190,6 +215,28 @@ async def get_order_analytics(
         )[:5]
     ]
 
+    orders_by_status = [
+        {
+            "status": status,
+            "orders": stats["orders"],
+            "revenue": stats["revenue"],
+        }
+        for status, stats in sorted(
+            status_totals.items(), key=lambda item: item[1]["orders"], reverse=True
+        )
+    ]
+
+    top_delivery_areas = [
+        {
+            "area": area,
+            "orders": stats["orders"],
+            "revenue": stats["revenue"],
+        }
+        for area, stats in sorted(
+            area_totals.items(), key=lambda item: item[1]["orders"], reverse=True
+        )[:5]
+    ]
+
     return {
         "total_orders": total_orders,
         "total_revenue": total_revenue,
@@ -199,6 +246,8 @@ async def get_order_analytics(
         "orders_by_hour": orders_by_hour,
         "order_value_distribution": order_value_distribution,
         "top_menu_items": top_menu_items,
+        "orders_by_status": orders_by_status,
+        "top_delivery_areas": top_delivery_areas,
         "period": {
             "start": period_start.isoformat() if period_start else None,
             "end": period_end.isoformat() if period_end else None,

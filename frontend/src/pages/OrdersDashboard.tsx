@@ -11,6 +11,8 @@ import {
   OrdersByHourChart,
   OrderValueDistributionChart,
   TopMenuItemsChart,
+  OrdersByStatusChart,
+  TopDeliveryAreasChart,
 } from '../components/Charts';
 import type { OrderAnalyticsResponse } from '../types/analytics';
 
@@ -130,6 +132,24 @@ export function OrdersDashboard() {
           <h3 className="card-title">Itens mais Vendidos</h3>
           {data.top_menu_items.length > 0 ? (
             <TopMenuItemsChart data={data.top_menu_items} />
+          ) : (
+            <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="card-title">Pedidos por Status</h3>
+          {data.orders_by_status.length > 0 ? (
+            <OrdersByStatusChart data={data.orders_by_status} />
+          ) : (
+            <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="card-title">Bairros com Mais Pedidos</h3>
+          {data.top_delivery_areas.length > 0 ? (
+            <TopDeliveryAreasChart data={data.top_delivery_areas} />
           ) : (
             <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
           )}
