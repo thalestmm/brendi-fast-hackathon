@@ -25,7 +25,17 @@ export function OrdersDashboard() {
         setLoading(true);
         setError(null);
         const analytics = await analyticsService.getOrders();
-        setData(analytics);
+        setData({
+          ...analytics,
+          daily_data: analytics.daily_data ?? [],
+          orders_by_day_of_week: analytics.orders_by_day_of_week ?? [],
+          orders_by_hour: analytics.orders_by_hour ?? [],
+          order_value_distribution: analytics.order_value_distribution ?? [],
+          top_menu_items: analytics.top_menu_items ?? [],
+          orders_by_status: analytics.orders_by_status ?? [],
+          top_delivery_areas: analytics.top_delivery_areas ?? [],
+          period: analytics.period ?? { start: null, end: null },
+        });
       } catch (err) {
         setError('Falha ao carregar analytics de pedidos');
         console.error('Error fetching orders:', err);
