@@ -27,8 +27,8 @@ from app.graphs.nodes.tools import create_tools_node_dynamic
 logger = logging.getLogger(__name__)
 
 # Agent configuration
-MODEL_NAME = "gpt-4o-mini"  # Use cost-effective model
-MAX_TOKENS = 2000
+MODEL_NAME = "gpt-5-mini"  # Use cost-effective model
+MAX_TOKENS = 8000
 TEMPERATURE = 0.7
 
 # System prompt for restaurant management assistant
@@ -48,6 +48,7 @@ Guidelines:
 - If you don't have enough information, ask clarifying questions
 - Always consider the restaurant's context and constraints
 - You can call analytics tools without specifying store_id - it will be automatically provided
+- Make sure to use the calculator tool for calculations and return the result with proper punctuation and formatting (one hundred and twenty = R$ 120,00)
 
 When answering questions:
 1. Use RAG search to find relevant historical context

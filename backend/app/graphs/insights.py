@@ -23,8 +23,8 @@ from app.core.database import AsyncSessionLocal
 logger = logging.getLogger(__name__)
 
 # Agent configuration
-MODEL_NAME = "gpt-4o-mini"
-MAX_TOKENS = 1000
+MODEL_NAME = "gpt-5-mini"
+MAX_TOKENS = 3000
 TEMPERATURE = 0.7
 
 # System prompt for insights generation

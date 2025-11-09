@@ -3,6 +3,7 @@ Custom tool node that injects store_id from state into tool calls.
 """
 
 import logging
+import json
 from typing import Dict, Any
 
 from langchain_core.messages import ToolMessage, AIMessage
@@ -109,7 +110,7 @@ def create_tools_node_with_store_id(store_id: str):
     return tool_node
 
 
-def create_tools_node_dynamic(state: Dict[str, Any]) -> Dict[str, Any]:
+async def create_tools_node_dynamic(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Dynamic tool node that extracts store_id from state and injects it.
 
@@ -176,10 +177,12 @@ def create_tools_node_dynamic(state: Dict[str, Any]) -> Dict[str, Any]:
 
                 if tool:
                     try:
-                        result = tool.invoke(tool_args)
+                        result = await tool.ainvoke(tool_args)
                         tool_messages.append(
                             ToolMessage(
-                                content=str(result),
+                                content=json.dumps(result, ensure_ascii=False)
+                                if isinstance(result, (dict, list))
+                                else str(result),
                                 tool_call_id=tool_call.get("id"),
                             )
                         )
