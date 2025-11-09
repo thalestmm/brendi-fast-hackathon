@@ -50,7 +50,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
         role: 'assistant',
-        content: 'Sorry, I encountered an error. Please try again.',
+        content: 'Desculpe, ocorreu um erro. Por favor, tente novamente.',
         created_at: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -97,7 +97,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
           borderRadius: '12px 12px 0 0',
         }}
       >
-        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>AI Assistant</h3>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>Assistente IA</h3>
         <button
           onClick={onClose}
           style={{
@@ -113,7 +113,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
             alignItems: 'center',
             justifyContent: 'center',
           }}
-          aria-label="Close chat"
+          aria-label="Fechar chat"
         >
           ×
         </button>
@@ -132,9 +132,9 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
       >
         {messages.length === 0 && (
           <div style={{ textAlign: 'center', color: '#666', marginTop: '40px' }}>
-            <p>Start a conversation with the AI assistant!</p>
+            <p>Comece uma conversa com o assistente de IA!</p>
             <p style={{ fontSize: '14px', marginTop: '8px' }}>
-              Ask questions about your restaurant analytics, campaigns, or customers.
+              Faça perguntas sobre analytics, campanhas ou clientes do seu restaurante.
             </p>
           </div>
         )}
@@ -167,7 +167,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
                 backgroundColor: '#f0f0f0',
               }}
             >
-              Thinking...
+              Pensando...
             </div>
           </div>
         )}
@@ -188,7 +188,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="Type your message..."
+          placeholder="Digite sua mensagem..."
           disabled={loading}
           style={{
             flex: 1,
@@ -204,7 +204,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
           className="btn btn-primary"
           style={{ padding: '10px 20px' }}
         >
-          Send
+          Enviar
         </button>
       </div>
     </div>

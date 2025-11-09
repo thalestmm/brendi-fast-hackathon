@@ -21,7 +21,7 @@ export function OrdersDashboard() {
         const analytics = await analyticsService.getOrders();
         setData(analytics);
       } catch (err) {
-        setError('Failed to load order analytics');
+        setError('Falha ao carregar analytics de pedidos');
         console.error('Error fetching orders:', err);
       } finally {
         setLoading(false);
@@ -34,7 +34,7 @@ export function OrdersDashboard() {
   if (loading) {
     return (
       <div className="container" style={{ paddingTop: '40px' }}>
-        <div className="loading">Loading order analytics...</div>
+        <div className="loading">Carregando analytics de pedidos...</div>
       </div>
     );
   }
@@ -54,25 +54,25 @@ export function OrdersDashboard() {
   return (
     <div className="container" style={{ paddingTop: '40px', paddingBottom: '100px' }}>
       <h1 style={{ marginBottom: '32px', fontSize: '32px', fontWeight: '600' }}>
-        Orders Dashboard
+        Dashboard de Pedidos
       </h1>
 
       {/* Key Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '32px' }}>
         <div className="card">
-          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Total Orders</h3>
+          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Total de Pedidos</h3>
           <p style={{ fontSize: '32px', fontWeight: '600', color: 'var(--primary-red)' }}>
-            {data.total_orders.toLocaleString()}
+            {data.total_orders.toLocaleString('pt-BR')}
           </p>
         </div>
         <div className="card">
-          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Total Revenue</h3>
+          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Receita Total</h3>
           <p style={{ fontSize: '32px', fontWeight: '600', color: 'var(--primary-red)' }}>
             R$ {(data.total_revenue / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </p>
         </div>
         <div className="card">
-          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Average Order Value</h3>
+          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Ticket Médio</h3>
           <p style={{ fontSize: '32px', fontWeight: '600', color: 'var(--primary-red)' }}>
             R$ {(data.average_order_value / 100).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
           </p>
@@ -81,7 +81,7 @@ export function OrdersDashboard() {
 
       {/* Chart */}
       <div className="card">
-        <h3 className="card-title">Orders Over Time</h3>
+        <h3 className="card-title">Pedidos ao Longo do Tempo</h3>
         <OrdersChart data={data.daily_data} />
       </div>
 

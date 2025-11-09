@@ -8,9 +8,9 @@ export function Navigation() {
   const location = useLocation();
 
   const navItems = [
-    { path: '/orders', label: 'Orders' },
-    { path: '/campaigns', label: 'Campaigns' },
-    { path: '/customers', label: 'Customers' },
+    { path: '/orders', label: 'Pedidos' },
+    { path: '/campaigns', label: 'Campanhas' },
+    { path: '/customers', label: 'Clientes' },
   ];
 
   return (
@@ -35,7 +35,7 @@ export function Navigation() {
             marginRight: '40px',
           }}
         >
-          Restaurant Analytics
+          Analytics do Restaurante
         </Link>
         <div style={{ display: 'flex', gap: '8px' }}>
           {navItems.map((item) => (

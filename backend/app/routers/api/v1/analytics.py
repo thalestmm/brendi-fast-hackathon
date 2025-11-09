@@ -133,7 +133,7 @@ async def get_insights(
             store_id=store_id,
             page_type=request.page_type,
         )
-        
+
         if cached_data:
             logger.info(f"Returning cached insight for {store_id}:{request.page_type}")
             return InsightResponse(
@@ -185,11 +185,11 @@ async def clear_insights_cache(
     from app.services.cache_service import get_cache_service
 
     cache_service = get_cache_service()
-    
+
     try:
         deleted_count = await cache_service.clear_store_insights(store_id)
         logger.info(f"Cleared {deleted_count} cached insights for store {store_id}")
-        
+
         return {
             "status": "success",
             "message": f"Cleared {deleted_count} cached insights",

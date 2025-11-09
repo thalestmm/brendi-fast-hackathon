@@ -143,12 +143,12 @@ async def load_all_data_endpoint(
 ) -> Dict[str, Any]:
     """
     Load all data from JSON files into PostgreSQL.
-    
+
     This endpoint is for development/debugging purposes.
     """
     from app.services.data_loader import load_all_data
     from app.core.config import settings
-    
+
     try:
         results = await load_all_data(
             session=db,
@@ -156,7 +156,7 @@ async def load_all_data_endpoint(
             store_id=store_id,
             skip_chroma=True,
         )
-        
+
         return {
             "status": "success",
             "message": f"Data loaded for store {store_id}",

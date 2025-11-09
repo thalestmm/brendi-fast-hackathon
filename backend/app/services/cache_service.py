@@ -120,7 +120,7 @@ class CacheService:
             keys = []
             async for key in self.redis.scan_iter(match=pattern):
                 keys.append(key)
-            
+
             if keys:
                 deleted = await self.redis.delete(*keys)
                 logger.info(f"Cleared {deleted} cached insights for store {store_id}")

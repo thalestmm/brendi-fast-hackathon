@@ -20,7 +20,7 @@ export function CustomersDashboard() {
         const analytics = await analyticsService.getConsumers();
         setData(analytics);
       } catch (err) {
-        setError('Failed to load consumer analytics');
+        setError('Falha ao carregar analytics de clientes');
         console.error('Error fetching consumers:', err);
       } finally {
         setLoading(false);
@@ -33,7 +33,7 @@ export function CustomersDashboard() {
   if (loading) {
     return (
       <div className="container" style={{ paddingTop: '40px' }}>
-        <div className="loading">Loading consumer analytics...</div>
+        <div className="loading">Carregando analytics de clientes...</div>
       </div>
     );
   }
@@ -53,19 +53,19 @@ export function CustomersDashboard() {
   return (
     <div className="container" style={{ paddingTop: '40px', paddingBottom: '100px' }}>
       <h1 style={{ marginBottom: '32px', fontSize: '32px', fontWeight: '600' }}>
-        Customers Dashboard
+        Dashboard de Clientes
       </h1>
 
       {/* Key Metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px', marginBottom: '32px' }}>
         <div className="card">
-          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Total Customers</h3>
+          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Total de Clientes</h3>
           <p style={{ fontSize: '32px', fontWeight: '600', color: 'var(--primary-red)' }}>
-            {data.total_consumers.toLocaleString()}
+            {data.total_consumers.toLocaleString('pt-BR')}
           </p>
         </div>
         <div className="card">
-          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Avg Orders per Customer</h3>
+          <h3 style={{ fontSize: '14px', color: '#666', marginBottom: '8px' }}>Média de Pedidos por Cliente</h3>
           <p style={{ fontSize: '32px', fontWeight: '600', color: 'var(--primary-red)' }}>
             {data.average_orders_per_consumer.toFixed(1)}
           </p>
@@ -74,7 +74,7 @@ export function CustomersDashboard() {
 
       {/* Top Customers */}
       <div className="card">
-        <h3 className="card-title">Top Customers</h3>
+        <h3 className="card-title">Principais Clientes</h3>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {data.top_customers.map((customer, index) => (
             <div key={customer.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px', backgroundColor: '#f9f9f9', borderRadius: '6px' }}>
@@ -84,7 +84,7 @@ export function CustomersDashboard() {
                 {customer.phone && <span style={{ color: '#666', marginLeft: '8px' }}>({customer.phone})</span>}
               </div>
               <span style={{ fontWeight: '600', color: 'var(--primary-red)' }}>
-                {customer.order_count || 0} orders
+                {customer.order_count || 0} pedidos
               </span>
             </div>
           ))}

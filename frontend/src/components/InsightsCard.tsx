@@ -23,7 +23,7 @@ export function InsightsCard({ pageType }: InsightsCardProps) {
         const data = await analyticsService.getInsights(pageType);
         setInsight(data);
       } catch (err) {
-        setError('Failed to load insights');
+        setError('Falha ao carregar insights');
         console.error('Error fetching insights:', err);
       } finally {
         setLoading(false);
@@ -36,8 +36,8 @@ export function InsightsCard({ pageType }: InsightsCardProps) {
   if (loading) {
     return (
       <div className="card">
-        <h3 className="card-title">AI Insights</h3>
-        <div className="loading">Loading insights...</div>
+        <h3 className="card-title">Insights da IA</h3>
+        <div className="loading">Carregando insights...</div>
       </div>
     );
   }
@@ -45,7 +45,7 @@ export function InsightsCard({ pageType }: InsightsCardProps) {
   if (error) {
     return (
       <div className="card">
-        <h3 className="card-title">AI Insights</h3>
+        <h3 className="card-title">Insights da IA</h3>
         <div className="error">{error}</div>
       </div>
     );
@@ -53,11 +53,11 @@ export function InsightsCard({ pageType }: InsightsCardProps) {
 
   return (
     <div className="card">
-      <h3 className="card-title">AI Insights</h3>
+      <h3 className="card-title">Insights da IA</h3>
       <p style={{ lineHeight: '1.6', color: '#666' }}>{insight?.insight}</p>
       {insight?.generated_at && (
         <p style={{ fontSize: '12px', color: '#999', marginTop: '12px' }}>
-          Generated at {new Date(insight.generated_at).toLocaleString()}
+          Gerado em {new Date(insight.generated_at).toLocaleString('pt-BR')}
         </p>
       )}
     </div>

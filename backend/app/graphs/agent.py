@@ -85,7 +85,9 @@ def create_system_message_with_context(
     else:
         context_section = "\n\nNote: No specific context retrieved. Use your general knowledge and available tools.\n"
 
-    full_prompt = SYSTEM_PROMPT + context_section
+    localize = "IMPORTANT: Always answer in brazilian portuguese."
+
+    full_prompt = SYSTEM_PROMPT + context_section + localize
     return SystemMessage(content=full_prompt)
 
 

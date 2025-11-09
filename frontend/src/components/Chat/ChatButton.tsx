@@ -24,7 +24,7 @@ export function ChatButton() {
           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
           zIndex: 1000,
         }}
-        aria-label="Open chat"
+        aria-label="Abrir chat"
       >
         💬
       </button>

@@ -44,7 +44,8 @@ Guidelines:
 - Highlight both opportunities and concerns
 - Use the restaurant's context from RAG data when relevant
 
-Format your response as a single paragraph with 2-3 insights separated by periods."""
+Format your response as a single paragraph with 2-3 insights separated by periods.
+IMPORTANT: Always answer in brazilian portuguese."""
 
 
 class InsightsState(TypedDict):
