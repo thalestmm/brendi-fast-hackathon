@@ -10,6 +10,34 @@ interface ChatPanelProps {
   onClose: () => void;
 }
 
+const renderAssistantMessage = (content: string) => {
+  const lines = content.split('\n');
+
+  return lines.map((line, lineIndex) => {
+    const segments = line.split(/(\*\*.*?\*\*)/g);
+
+    return (
+      <span key={`line-${lineIndex}`}>
+        {segments.map((segment, segmentIndex) => {
+          const isBoldSegment =
+            segment.startsWith('**') && segment.endsWith('**') && segment.length > 4;
+
+          if (isBoldSegment) {
+            return (
+              <strong key={`segment-${lineIndex}-${segmentIndex}`}>
+                {segment.slice(2, -2)}
+              </strong>
+            );
+          }
+
+          return <span key={`segment-${lineIndex}-${segmentIndex}`}>{segment}</span>;
+        })}
+        {lineIndex < lines.length - 1 && <br />}
+      </span>
+    );
+  });
+};
+
 export function ChatPanel({ onClose }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState('');
@@ -171,7 +199,9 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
                 color: message.role === 'user' ? 'white' : 'var(--black)',
               }}
             >
-              {message.content}
+              {message.role === 'assistant'
+                ? renderAssistantMessage(message.content)
+                : message.content}
             </div>
           </div>
         ))}

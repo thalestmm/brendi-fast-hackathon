@@ -5,7 +5,13 @@
 import { useEffect, useState } from 'react';
 import { analyticsService } from '../services/analytics';
 import { InsightsCard } from '../components/InsightsCard';
-import { OrdersChart } from '../components/Charts/OrdersChart';
+import {
+  OrdersChart,
+  OrdersByDayOfWeekChart,
+  OrdersByHourChart,
+  OrderValueDistributionChart,
+  TopMenuItemsChart,
+} from '../components/Charts';
 import type { OrderAnalyticsResponse } from '../types/analytics';
 
 export function OrdersDashboard() {
@@ -83,6 +89,51 @@ export function OrdersDashboard() {
       <div className="card">
         <h3 className="card-title">Pedidos ao Longo do Tempo</h3>
         <OrdersChart data={data.daily_data} />
+      </div>
+
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gap: '24px',
+          marginTop: '24px',
+        }}
+      >
+        <div className="card">
+          <h3 className="card-title">Pedidos por Dia da Semana</h3>
+          {data.orders_by_day_of_week.length > 0 ? (
+            <OrdersByDayOfWeekChart data={data.orders_by_day_of_week} />
+          ) : (
+            <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="card-title">Pedidos por Horário</h3>
+          {data.orders_by_hour.length > 0 ? (
+            <OrdersByHourChart data={data.orders_by_hour} />
+          ) : (
+            <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="card-title">Ticket Médio por Faixa de Valor</h3>
+          {data.order_value_distribution.length > 0 ? (
+            <OrderValueDistributionChart data={data.order_value_distribution} />
+          ) : (
+            <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
+          )}
+        </div>
+
+        <div className="card">
+          <h3 className="card-title">Itens mais Vendidos</h3>
+          {data.top_menu_items.length > 0 ? (
+            <TopMenuItemsChart data={data.top_menu_items} />
+          ) : (
+            <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
+          )}
+        </div>
       </div>
 
       {/* AI Insights */}

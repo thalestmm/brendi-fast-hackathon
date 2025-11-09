@@ -3,7 +3,7 @@ Analytics service for aggregating restaurant data.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, Any, Optional
 
 from sqlalchemy import select, func, and_, cast, Date
@@ -32,47 +32,45 @@ async def get_order_analytics(
     Returns:
         Dictionary with order analytics
     """
-    # Build query
-    conditions = [Order.store_id == store_id]
+    # Build base filters
+    base_filters = [Order.store_id == store_id]
     if start_date:
-        conditions.append(Order.created_at >= start_date)
+        base_filters.append(Order.created_at >= start_date)
     if end_date:
-        conditions.append(Order.created_at <= end_date)
+        base_filters.append(Order.created_at <= end_date)
 
-    # Total orders
-    total_orders_stmt = select(func.count(Order.id)).where(and_(*conditions))
+    # Totals
+    total_orders_stmt = select(func.count(Order.id)).where(and_(*base_filters))
     total_orders_result = await session.execute(total_orders_stmt)
-    total_orders = total_orders_result.scalar() or 0
+    total_orders = int(total_orders_result.scalar() or 0)
 
-    # Total revenue
-    revenue_stmt = select(func.sum(Order.total_price)).where(and_(*conditions))
+    revenue_stmt = select(func.sum(Order.total_price)).where(and_(*base_filters))
     revenue_result = await session.execute(revenue_stmt)
-    total_revenue = revenue_result.scalar() or 0
+    total_revenue = int(revenue_result.scalar() or 0)
 
-    # Average order value
     avg_order_value = (total_revenue / total_orders) if total_orders > 0 else 0
 
-    # Orders by day (last 30 days if no date range)
+    # Determine reporting window (defaults to last 30 days)
+    period_start = start_date or datetime.now(tz=timezone.utc) - timedelta(days=30)
+    period_end = end_date or datetime.now(tz=timezone.utc)
+
+    period_filters = list(base_filters)
     if not start_date:
-        start_date = datetime.now() - timedelta(days=30)
+        period_filters.append(Order.created_at >= period_start)
     if not end_date:
-        end_date = datetime.now()
+        period_filters.append(Order.created_at <= period_end)
 
-    # Use CAST to DATE for PostgreSQL compatibility
-    # This avoids GROUP BY issues with date_trunc expressions
     date_expr = cast(Order.created_at, Date)
-
     daily_orders_stmt = (
         select(
             date_expr.label("date"),
             func.count(Order.id).label("count"),
             func.sum(Order.total_price).label("revenue"),
         )
-        .where(and_(*conditions))
+        .where(and_(*period_filters))
         .group_by(date_expr)
         .order_by(date_expr)
     )
-
     daily_result = await session.execute(daily_orders_stmt)
     daily_data = [
         {
@@ -83,14 +81,127 @@ async def get_order_analytics(
         for row in daily_result.all()
     ]
 
+    # Orders by day of week
+    weekday_labels = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"]
+    dow_expr = func.extract("dow", Order.created_at)
+    dow_stmt = (
+        select(
+            dow_expr.label("dow"),
+            func.count(Order.id).label("count"),
+            func.sum(Order.total_price).label("revenue"),
+        )
+        .where(and_(*base_filters))
+        .group_by(dow_expr)
+        .order_by(dow_expr)
+    )
+    dow_result = await session.execute(dow_stmt)
+    orders_by_day_of_week = []
+    for row in dow_result.all():
+        dow_index = int(row.dow) if row.dow is not None else None
+        label = (
+            weekday_labels[dow_index]
+            if dow_index is not None and 0 <= dow_index < len(weekday_labels)
+            else "Desconhecido"
+        )
+        orders_by_day_of_week.append(
+            {
+                "day": label,
+                "orders": row.count,
+                "revenue": int(row.revenue) if row.revenue else 0,
+            }
+        )
+
+    # Orders by hour of day
+    hour_expr = func.extract("hour", Order.created_at)
+    hour_stmt = (
+        select(
+            hour_expr.label("hour"),
+            func.count(Order.id).label("count"),
+            func.sum(Order.total_price).label("revenue"),
+        )
+        .where(and_(*base_filters))
+        .group_by(hour_expr)
+        .order_by(hour_expr)
+    )
+    hour_result = await session.execute(hour_stmt)
+    orders_by_hour = [
+        {
+            "hour": int(row.hour) if row.hour is not None else 0,
+            "orders": row.count,
+            "revenue": int(row.revenue) if row.revenue else 0,
+        }
+        for row in hour_result.all()
+    ]
+
+    # Order value distribution buckets (values in cents)
+    bucket_definitions = [
+        ("Até R$ 50", 0, 5000),
+        ("R$ 50 - R$ 99", 5000, 10000),
+        ("R$ 100 - R$ 149", 10000, 15000),
+        ("R$ 150 - R$ 199", 15000, 20000),
+        ("R$ 200+", 20000, None),
+    ]
+    bucket_stats = {
+        label: {"orders": 0, "revenue": 0} for label, _start, _end in bucket_definitions
+    }
+
+    value_stmt = select(Order.total_price).where(and_(*base_filters))
+    value_result = await session.execute(value_stmt)
+    for total_price in value_result.scalars().all():
+        price = int(total_price or 0)
+        for label, start_value, end_value in bucket_definitions:
+            if price >= start_value and (end_value is None or price < end_value):
+                bucket_stats[label]["orders"] += 1
+                bucket_stats[label]["revenue"] += price
+                break
+
+    order_value_distribution = [
+        {
+            "bucket": label,
+            "orders": stats["orders"],
+            "revenue": stats["revenue"],
+        }
+        for label, stats in bucket_stats.items()
+    ]
+
+    # Top menu items
+    products_stmt = select(Order.products).where(and_(*base_filters))
+    products_result = await session.execute(products_stmt)
+    item_totals: Dict[str, Dict[str, int]] = {}
+    for record in products_result.scalars().all():
+        if not record:
+            continue
+        for product in record:
+            name = product.get("name") or "Item sem nome"
+            quantity = int(product.get("quantity") or 0)
+            price = int(product.get("price") or 0)
+            stats = item_totals.setdefault(name, {"orders": 0, "revenue": 0})
+            stats["orders"] += quantity
+            stats["revenue"] += quantity * price
+
+    top_menu_items = [
+        {
+            "name": name,
+            "orders": stats["orders"],
+            "revenue": stats["revenue"],
+        }
+        for name, stats in sorted(
+            item_totals.items(), key=lambda item: item[1]["revenue"], reverse=True
+        )[:5]
+    ]
+
     return {
         "total_orders": total_orders,
         "total_revenue": total_revenue,
         "average_order_value": avg_order_value,
         "daily_data": daily_data,
+        "orders_by_day_of_week": orders_by_day_of_week,
+        "orders_by_hour": orders_by_hour,
+        "order_value_distribution": order_value_distribution,
+        "top_menu_items": top_menu_items,
         "period": {
-            "start": start_date.isoformat() if start_date else None,
-            "end": end_date.isoformat() if end_date else None,
+            "start": period_start.isoformat() if period_start else None,
+            "end": period_end.isoformat() if period_end else None,
         },
     }
 
