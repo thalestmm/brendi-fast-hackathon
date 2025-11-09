@@ -35,8 +35,8 @@ RUN npm install -g serve
 COPY --from=builder /app/dist ./dist
 
 # Expose configurable port (defaults to 80)
-ENV PORT=80
-EXPOSE 80
+ENV PORT=3030
+EXPOSE 3030
 
 # Run static server accessible on all interfaces
 CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT}"]

@@ -147,7 +147,7 @@ services:
         - VITE_DEFAULT_STORE_ID=${STORE_ID:-0WcZ1MWEaFc1VftEBdLa}
     container_name: frontend
     ports:
-      - 3030:80
+      - 3030:3030
     depends_on:
       - backend
     healthcheck:
