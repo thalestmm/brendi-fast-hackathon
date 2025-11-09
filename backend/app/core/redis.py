@@ -14,7 +14,9 @@ logger = logging.getLogger(__name__)
 
 # Redis Connection Instances
 _redis_sync_connection: Optional[redis.Redis] = None
-_redis_async_connection: Optional[redis.asyncio.Redis] = None  # Lazy import for async Redis (type: Any)
+_redis_async_connection: Optional[redis.asyncio.Redis] = (
+    None  # Lazy import for async Redis (type: Any)
+)
 
 
 def get_redis_connection() -> redis.Redis:
@@ -53,7 +55,7 @@ def get_async_redis_connection():
     if _redis_async_connection is None:
         # Lazy import to avoid issues in sync contexts (like RQ workers)
         import redis.asyncio as aioredis
-        
+
         _redis_async_connection = aioredis.Redis(
             host=settings.REDIS_HOST,
             port=settings.REDIS_PORT,

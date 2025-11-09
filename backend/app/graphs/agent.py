@@ -61,6 +61,7 @@ Remember: You're helping a restaurant manager, so focus on practical, implementa
 
 class AgentState(TypedDict):
     """State for the LangGraph agent."""
+
     messages: Annotated[List[BaseMessage], "Chat messages"]
     store_id: str
     rag_context: str
@@ -76,13 +77,15 @@ def create_agent_model() -> ChatOpenAI:
     )
 
 
-def create_system_message_with_context(rag_context: str, store_id: str = "") -> SystemMessage:
+def create_system_message_with_context(
+    rag_context: str, store_id: str = ""
+) -> SystemMessage:
     """Create system message with RAG context injected."""
     if rag_context and rag_context.strip() and not rag_context.startswith("Error"):
         context_section = f"\n\nRelevant Context from Restaurant Data:\n{rag_context}\n"
     else:
         context_section = "\n\nNote: No specific context retrieved. Use your general knowledge and available tools.\n"
-    
+
     full_prompt = SYSTEM_PROMPT + context_section
     return SystemMessage(content=full_prompt)
 
@@ -96,11 +99,11 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
         messages = state.get("messages", [])
         rag_context = state.get("rag_context", "")
         store_id = state.get("store_id", "")
-        
+
         # Prepare messages with system prompt including RAG context and store_id
         system_msg = create_system_message_with_context(rag_context, store_id)
         agent_messages = [system_msg] + messages
-        
+
         # Get available tools
         tools = [
             calculator_tool,
@@ -111,15 +114,15 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             get_menu_events_analytics_tool,
             search_historical_data,
         ]
-        
+
         # Bind tools to model
         model_with_tools = model.bind_tools(tools)
-        
+
         # Get response from model
         response = model_with_tools.invoke(agent_messages)
-        
+
         return {"messages": [response]}
-    
+
     except Exception as e:
         logger.error(f"Error in agent node: {e}", exc_info=True)
         error_message = AIMessage(
@@ -134,7 +137,7 @@ def should_continue(state: AgentState) -> str:
     """
     messages = state.get("messages", [])
     last_message = messages[-1] if messages else None
-    
+
     if last_message and hasattr(last_message, "tool_calls") and last_message.tool_calls:
         return "tools"
     return "end"
@@ -147,15 +150,17 @@ def should_continue(state: AgentState) -> str:
 def create_graph() -> StateGraph:
     """Create the LangGraph agent graph."""
     workflow = StateGraph(AgentState)
-    
+
     # Add nodes
     workflow.add_node("retrieve_rag", retrieve_rag_context)
     workflow.add_node("agent", agent_node)
-    workflow.add_node("tools", create_tools_node_dynamic)  # Dynamic node that injects store_id
-    
+    workflow.add_node(
+        "tools", create_tools_node_dynamic
+    )  # Dynamic node that injects store_id
+
     # Set entry point
     workflow.set_entry_point("retrieve_rag")
-    
+
     # Add edges
     workflow.add_edge("retrieve_rag", "agent")
     workflow.add_conditional_edges(
@@ -167,7 +172,7 @@ def create_graph() -> StateGraph:
         },
     )
     workflow.add_edge("tools", "agent")
-    
+
     return workflow
 
 
@@ -179,4 +184,3 @@ logger.info("LangGraph agent initialized successfully")
 
 
 __all__ = ["graph", "AgentState", "create_graph"]
-

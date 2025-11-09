@@ -61,7 +61,7 @@ async def get_order_analytics(
     # Use CAST to DATE for PostgreSQL compatibility
     # This avoids GROUP BY issues with date_trunc expressions
     date_expr = cast(Order.created_at, Date)
-    
+
     daily_orders_stmt = (
         select(
             date_expr.label("date"),
@@ -72,7 +72,7 @@ async def get_order_analytics(
         .group_by(date_expr)
         .order_by(date_expr)
     )
-    
+
     daily_result = await session.execute(daily_orders_stmt)
     daily_data = [
         {

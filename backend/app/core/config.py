@@ -68,10 +68,11 @@ class Settings(BaseSettings):
 
     # Agent configuration
     AGENT_MESSAGE_HISTORY_LIMIT: int = Field(default=10)
-    
+
     # Message buffering configuration
     MESSAGE_BUFFER_TIMEOUT_SECONDS: int = Field(
-        default=2, description="Wait time in seconds before processing buffered messages"
+        default=2,
+        description="Wait time in seconds before processing buffered messages",
     )
 
     model_config = ConfigDict(

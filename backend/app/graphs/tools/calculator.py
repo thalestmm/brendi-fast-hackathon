@@ -9,10 +9,10 @@ from langchain_core.tools import tool
 def calculator_tool(expression: str) -> str:
     """
     Evaluate a mathematical expression.
-    
+
     Args:
         expression: Mathematical expression to evaluate (e.g., "2 + 2", "100 * 0.15")
-    
+
     Returns:
         Result of the calculation as a string
     """
@@ -25,4 +25,3 @@ def calculator_tool(expression: str) -> str:
 
 
 __all__ = ["calculator_tool"]
-

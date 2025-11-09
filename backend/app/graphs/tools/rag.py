@@ -21,18 +21,18 @@ def search_historical_data(
 ) -> str:
     """
     Search historical restaurant data using semantic search (RAG).
-    
+
     This tool searches through orders, campaigns, customer feedback, menu events,
     and other restaurant data to find relevant context for answering questions.
-    
+
     Note: store_id is automatically provided - you don't need to specify it.
-    
+
     Args:
         query: Search query/question
-        content_types: Optional list of content types to filter by 
+        content_types: Optional list of content types to filter by
                       (e.g., ['order', 'campaign', 'feedback'])
         top_k: Number of results to return (default: 5)
-    
+
     Returns:
         Formatted context string with relevant information
     """
@@ -50,4 +50,3 @@ def search_historical_data(
 
 
 __all__ = ["search_historical_data"]
-

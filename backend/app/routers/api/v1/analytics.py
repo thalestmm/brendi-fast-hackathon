@@ -122,13 +122,13 @@ async def get_insights(
     Uses LangGraph agent with RAG context to generate actionable insights.
     """
     from app.graphs.insights import generate_insight_for_page
-    
+
     try:
         insight_text = await generate_insight_for_page(
             store_id=store_id,
             page_type=request.page_type,
         )
-        
+
         return InsightResponse(
             insight=insight_text,
             page_type=request.page_type,

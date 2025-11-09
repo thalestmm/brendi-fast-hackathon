@@ -60,7 +60,10 @@ async def lifespan(app: FastAPI):
                     logger.info("Loading data into PostgreSQL...")
                     try:
                         results = await load_all_data(
-                            session, settings.DATA_DIR, settings.STORE_ID, skip_chroma=True
+                            session,
+                            settings.DATA_DIR,
+                            settings.STORE_ID,
+                            skip_chroma=True,
                         )
 
                         logger.info("Data loading summary:")
@@ -68,7 +71,9 @@ async def lifespan(app: FastAPI):
                             logger.info(f"  {data_type}: {count} records")
                     except Exception as e:
                         logger.error(f"Error during data loading: {e}", exc_info=True)
-                        logger.warning("Continuing with document compilation despite errors")
+                        logger.warning(
+                            "Continuing with document compilation despite errors"
+                        )
                         results = {}
 
                     # Compile documents for Chroma

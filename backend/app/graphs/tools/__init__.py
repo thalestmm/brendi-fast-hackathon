@@ -21,4 +21,3 @@ __all__ = [
     "get_menu_events_analytics_tool",
     "search_historical_data",
 ]
-

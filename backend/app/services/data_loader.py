@@ -141,7 +141,7 @@ async def load_store_data(session: AsyncSession, file_path: Path, store_id: str)
         select(Store).where(Store.id == store_data["id"])
     )
     existing = existing_store.scalar_one_or_none()
-    
+
     if existing:
         # Update existing store
         for key, value in store_data.items():
@@ -230,7 +230,7 @@ async def load_orders_data(
                         select(Order).where(Order.id == order_data["id"])
                     )
                     existing_order = existing.scalar_one_or_none()
-                    
+
                     if existing_order:
                         # Update existing order (skip UUID to avoid conflicts)
                         existing_order.code = order_data.get("code")
@@ -247,14 +247,16 @@ async def load_orders_data(
                         # Insert new order
                         order = Order(**order_data)
                         session.add(order)
-                    
+
                     await session.commit()
                     total_loaded += 1
                 except Exception as e:
                     await session.rollback()
-                    logger.warning(f"Skipping order {order_data.get('id', 'unknown')}: {e}")
+                    logger.warning(
+                        f"Skipping order {order_data.get('id', 'unknown')}: {e}"
+                    )
                     continue
-            
+
             if total_loaded > 0 and total_loaded % batch_size == 0:
                 logger.info(
                     f"Loaded batch {i // batch_size + 1}: {batch_size} orders (total: {total_loaded})"

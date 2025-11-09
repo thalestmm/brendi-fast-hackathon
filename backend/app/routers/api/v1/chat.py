@@ -74,7 +74,7 @@ async def send_message(
 
     # Process message with LangGraph agent
     from app.services.agent_service import process_message
-    
+
     assistant_response = await process_message(
         session=db,
         session_id=session_id,

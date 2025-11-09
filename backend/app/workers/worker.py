@@ -101,7 +101,9 @@ def main():
             logger.info("Worker %s initialized", worker.name)
             logger.info("Listening to queue: %s", queue)
             logger.info("Job timeout: %ds", settings.WORKER_TIMEOUT)
-            logger.info("Message buffer timeout: %ds", settings.MESSAGE_BUFFER_TIMEOUT_SECONDS)
+            logger.info(
+                "Message buffer timeout: %ds", settings.MESSAGE_BUFFER_TIMEOUT_SECONDS
+            )
 
             # Run worker
             worker.work(logging_level=settings.LOG_LEVEL)
