@@ -28,6 +28,7 @@ def create_tools_node_with_store_id(store_id: str):
         get_consumer_analytics_tool,
         get_feedback_analytics_tool,
         get_menu_events_analytics_tool,
+        get_top_menu_items_tool,
     )
     from app.graphs.tools.rag import search_historical_data
 
@@ -38,6 +39,7 @@ def create_tools_node_with_store_id(store_id: str):
         get_consumer_analytics_tool,
         get_feedback_analytics_tool,
         get_menu_events_analytics_tool,
+        get_top_menu_items_tool,
         search_historical_data,
     ]
 
@@ -71,6 +73,7 @@ def create_tools_node_with_store_id(store_id: str):
                         "get_consumer_analytics_tool",
                         "get_feedback_analytics_tool",
                         "get_menu_events_analytics_tool",
+                        "get_top_menu_items_tool",
                         "search_historical_data",
                     ]:
                         if "store_id" not in tool_args:
@@ -126,6 +129,7 @@ def create_tools_node_dynamic(state: Dict[str, Any]) -> Dict[str, Any]:
         get_consumer_analytics_tool,
         get_feedback_analytics_tool,
         get_menu_events_analytics_tool,
+        get_top_menu_items_tool,
     )
     from app.graphs.tools.rag import search_historical_data
 
@@ -136,6 +140,7 @@ def create_tools_node_dynamic(state: Dict[str, Any]) -> Dict[str, Any]:
         get_consumer_analytics_tool,
         get_feedback_analytics_tool,
         get_menu_events_analytics_tool,
+        get_top_menu_items_tool,
         search_historical_data,
     ]
 
@@ -156,6 +161,7 @@ def create_tools_node_dynamic(state: Dict[str, Any]) -> Dict[str, Any]:
                     "get_consumer_analytics_tool",
                     "get_feedback_analytics_tool",
                     "get_menu_events_analytics_tool",
+                    "get_top_menu_items_tool",
                     "search_historical_data",
                 ]:
                     tool_args["store_id"] = store_id

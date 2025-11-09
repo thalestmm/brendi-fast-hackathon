@@ -18,6 +18,7 @@ from app.graphs.tools.analytics import (
     get_consumer_analytics_tool,
     get_feedback_analytics_tool,
     get_menu_events_analytics_tool,
+    get_top_menu_items_tool,
 )
 from app.graphs.tools.rag import search_historical_data
 from app.graphs.nodes.rag import retrieve_rag_context
@@ -127,6 +128,7 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
             get_consumer_analytics_tool,
             get_feedback_analytics_tool,
             get_menu_events_analytics_tool,
+            get_top_menu_items_tool,
             search_historical_data,
         ]
 

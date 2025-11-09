@@ -76,10 +76,9 @@ async def get_order_analytics(
 
     # If no recent data and no explicit date range, fall back to entire dataset
     if not daily_rows and not start_date:
-        range_stmt = (
-            select(func.min(Order.created_at), func.max(Order.created_at))
-            .where(Order.store_id == store_id)
-        )
+        range_stmt = select(
+            func.min(Order.created_at), func.max(Order.created_at)
+        ).where(Order.store_id == store_id)
         range_result = await session.execute(range_stmt)
         min_created_at, max_created_at = range_result.one()
 
@@ -197,9 +196,9 @@ async def get_order_analytics(
     ]
 
     # Detailed per-order analysis
-    order_details_stmt = (
-        select(Order.products, Order.raw_data, Order.total_price).where(and_(*base_filters))
-    )
+    order_details_stmt = select(
+        Order.products, Order.raw_data, Order.total_price
+    ).where(and_(*base_filters))
     order_details_result = await session.execute(order_details_stmt)
     item_totals: Dict[str, Dict[str, int]] = {}
     status_totals: Dict[str, Dict[str, int]] = {}
@@ -219,8 +218,14 @@ async def get_order_analytics(
 
         payload = raw_data or {}
         status_key = (payload.get("status") or "desconhecido").strip().lower()
-        status_label = status_key.title() if status_key not in {"", "desconhecido"} else "Desconhecido"
-        status_stats = status_totals.setdefault(status_label, {"orders": 0, "revenue": 0})
+        status_label = (
+            status_key.title()
+            if status_key not in {"", "desconhecido"}
+            else "Desconhecido"
+        )
+        status_stats = status_totals.setdefault(
+            status_label, {"orders": 0, "revenue": 0}
+        )
         status_stats["orders"] += 1
         status_stats["revenue"] += order_revenue
 
@@ -232,7 +237,9 @@ async def get_order_analytics(
             or ""
         ).strip()
         neighborhood_label = neighborhood if neighborhood else "Não informado"
-        area_stats = area_totals.setdefault(neighborhood_label, {"orders": 0, "revenue": 0})
+        area_stats = area_totals.setdefault(
+            neighborhood_label, {"orders": 0, "revenue": 0}
+        )
         area_stats["orders"] += 1
         area_stats["revenue"] += order_revenue
 
