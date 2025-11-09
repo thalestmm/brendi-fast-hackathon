@@ -3,6 +3,7 @@
  */
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+import type { ReactNode } from 'react';
 import type { DeliveryAreaBreakdown } from '../../types/analytics';
 
 interface TopDeliveryAreasChartProps {
@@ -35,7 +36,11 @@ export function TopDeliveryAreasChart({ data }: TopDeliveryAreasChartProps) {
           <LabelList
             dataKey="revenue"
             position="right"
-            formatter={(value: number) => `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+            formatter={(label: ReactNode) =>
+              typeof label === 'number'
+                ? `R$ ${label.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                : label ?? ''
+            }
             style={{ fontSize: 12, fill: '#444' }}
           />
         </Bar>

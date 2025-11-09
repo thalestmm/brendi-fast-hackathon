@@ -3,6 +3,7 @@
  */
 
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LabelList } from 'recharts';
+import type { ReactNode } from 'react';
 import type { TopMenuItem } from '../../types/analytics';
 
 interface TopMenuItemsChartProps {
@@ -36,7 +37,9 @@ export function TopMenuItemsChart({ data }: TopMenuItemsChartProps) {
           <LabelList
             dataKey="orders"
             position="insideRight"
-            formatter={(value: number) => `${value} pedidos`}
+            formatter={(label: ReactNode) =>
+              typeof label === 'number' ? `${label} pedidos` : label ?? ''
+            }
             fill="#fff"
             style={{ fontSize: 12 }}
           />
