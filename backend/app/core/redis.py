@@ -6,7 +6,6 @@ import logging
 from typing import Optional, Callable, Any
 
 import redis
-import redis.asyncio as aioredis
 from rq import Queue
 
 from app.core.config import settings
@@ -15,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # Redis Connection Instances
 _redis_sync_connection: Optional[redis.Redis] = None
-_redis_async_connection: Optional[aioredis.AsyncRedis] = None
+_redis_async_connection: Optional[redis.asyncio.Redis] = None  # Lazy import for async Redis (type: Any)
 
 
 def get_redis_connection() -> redis.Redis:
@@ -45,13 +44,16 @@ def get_redis_connection() -> redis.Redis:
     return _redis_sync_connection
 
 
-def get_async_redis_connection() -> aioredis.AsyncRedis:
+def get_async_redis_connection():
     """
     Singleton pattern to get the async Redis client.
     """
     global _redis_async_connection
 
     if _redis_async_connection is None:
+        # Lazy import to avoid issues in sync contexts (like RQ workers)
+        import redis.asyncio as aioredis
+        
         _redis_async_connection = aioredis.Redis(
             host=settings.REDIS_HOST,
             port=settings.REDIS_PORT,
@@ -61,12 +63,13 @@ def get_async_redis_connection() -> aioredis.AsyncRedis:
             health_check_interval=30,  # 30 seconds
         )
 
-    # Test connection
+    # Test connection (only if we can await, skip in sync contexts)
     try:
-        _redis_async_connection.ping()
-        logger.info("Redis async connection established")
-    except aioredis.ConnectionError as e:
-        logger.error(f"Failed to connect to Redis: {e}")
+        # Note: ping() is async, so we can't test here in sync context
+        # Connection will be tested on first use
+        logger.debug("Redis async connection client created")
+    except Exception as e:
+        logger.error(f"Failed to create async Redis client: {e}")
         raise
 
     return _redis_async_connection

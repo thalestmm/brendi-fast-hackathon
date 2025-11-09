@@ -45,6 +45,8 @@ class Settings(BaseSettings):
 
     # RQ configuration
     RQ_QUEUE_NAME: str = Field(default="default")
+    WORKER_QUEUES: list[str] = Field(default_factory=lambda: ["default"])
+    WORKER_TIMEOUT: int = Field(default=300)  # 5 minutes
 
     # ChromaDB Configuration
     CHROMA_HOST: Optional[str] = Field(default="chroma")
