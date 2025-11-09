@@ -15,6 +15,38 @@ class DailyData(BaseModel):
     revenue: int
 
 
+class DayOfWeekData(BaseModel):
+    """Aggregated orders by day of week."""
+
+    day: str
+    orders: int
+    revenue: int
+
+
+class HourlyData(BaseModel):
+    """Aggregated orders by hour."""
+
+    hour: int
+    orders: int
+    revenue: int
+
+
+class OrderValueBucket(BaseModel):
+    """Order value distribution bucket."""
+
+    bucket: str
+    orders: int
+    revenue: int
+
+
+class TopMenuItem(BaseModel):
+    """Top selling menu items."""
+
+    name: str
+    orders: int
+    revenue: int
+
+
 class OrderAnalyticsResponse(BaseModel):
     """Order analytics response."""
 
@@ -22,6 +54,10 @@ class OrderAnalyticsResponse(BaseModel):
     total_revenue: int
     average_order_value: float
     daily_data: List[DailyData]
+    orders_by_day_of_week: List[DayOfWeekData]
+    orders_by_hour: List[HourlyData]
+    order_value_distribution: List[OrderValueBucket]
+    top_menu_items: List[TopMenuItem]
     period: Dict[str, Optional[str]]
 
 

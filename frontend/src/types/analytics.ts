@@ -8,11 +8,39 @@ export interface DailyData {
   revenue: number;
 }
 
+export interface DayOfWeekData {
+  day: string;
+  orders: number;
+  revenue: number;
+}
+
+export interface HourlyData {
+  hour: number;
+  orders: number;
+  revenue: number;
+}
+
+export interface OrderValueBucket {
+  bucket: string;
+  orders: number;
+  revenue: number;
+}
+
+export interface TopMenuItem {
+  name: string;
+  orders: number;
+  revenue: number;
+}
+
 export interface OrderAnalyticsResponse {
   total_orders: number;
   total_revenue: number;
   average_order_value: number;
   daily_data: DailyData[];
+  orders_by_day_of_week: DayOfWeekData[];
+  orders_by_hour: HourlyData[];
+  order_value_distribution: OrderValueBucket[];
+  top_menu_items: TopMenuItem[];
   period: {
     start: string | null;
     end: string | null;
