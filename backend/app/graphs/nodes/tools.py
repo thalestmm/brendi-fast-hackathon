@@ -3,7 +3,7 @@ Custom tool node that injects store_id from state into tool calls.
 """
 
 import logging
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 from langchain_core.messages import ToolMessage, AIMessage
 from langgraph.prebuilt import ToolNode

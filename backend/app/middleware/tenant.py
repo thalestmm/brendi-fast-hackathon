@@ -5,7 +5,7 @@ Multi-tenant middleware for extracting and validating store_id.
 import logging
 from typing import Callable
 
-from fastapi import Request, HTTPException, status
+from fastapi import Request
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 

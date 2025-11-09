@@ -3,7 +3,7 @@ Analytics API endpoints.
 """
 
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Optional
 
 from fastapi import APIRouter, Query, HTTPException, status
@@ -128,6 +128,11 @@ async def get_insights(
     cache_service = get_cache_service()
 
     try:
+        # Log the request details
+        logger.info(
+            f"Insight request received - Store: {store_id}, Page: {request.page_type}"
+        )
+
         # Check cache first
         cached_data = await cache_service.get_insight(
             store_id=store_id,
@@ -135,7 +140,7 @@ async def get_insights(
         )
 
         if cached_data:
-            logger.info(f"Returning cached insight for {store_id}:{request.page_type}")
+            logger.info(f"✓ Cache HIT for {store_id}:{request.page_type}")
             return InsightResponse(
                 insight=cached_data["insight"],
                 page_type=cached_data["page_type"],
@@ -143,19 +148,30 @@ async def get_insights(
             )
 
         # Generate new insight if not cached
-        logger.info(f"Generating new insight for {store_id}:{request.page_type}")
+        logger.info(
+            f"✗ Cache MISS for {store_id}:{request.page_type} - Generating new insight..."
+        )
         insight_text = await generate_insight_for_page(
             store_id=store_id,
             page_type=request.page_type,
         )
 
         # Cache the result
-        await cache_service.set_insight(
+        cache_success = await cache_service.set_insight(
             store_id=store_id,
             page_type=request.page_type,
             insight=insight_text,
             ttl=300,  # 5 minutes TTL
         )
+
+        if cache_success:
+            logger.info(
+                f"✓ Insight cached successfully for {store_id}:{request.page_type}"
+            )
+        else:
+            logger.warning(
+                f"✗ Failed to cache insight for {store_id}:{request.page_type}"
+            )
 
         return InsightResponse(
             insight=insight_text,
@@ -169,6 +185,52 @@ async def get_insights(
             insight="Unable to generate insights at this time. Please try again later.",
             page_type=request.page_type,
             generated_at=datetime.now(),
+        )
+
+
+@router.get("/insights/cache/status")
+async def get_cache_status(
+    store_id: StoreId,
+) -> dict:
+    """
+    Check cache status for all insights for a store.
+
+    Useful for debugging caching issues.
+    """
+    from app.services.cache_service import get_cache_service
+    from app.core.redis import get_async_redis_connection
+
+    cache_service = get_cache_service()
+    redis_client = get_async_redis_connection()
+
+    try:
+        # Check cache for each page type
+        page_types = ["orders", "campaigns", "consumers", "feedbacks", "menu_events"]
+        cache_status = {}
+
+        for page_type in page_types:
+            cached_data = await cache_service.get_insight(store_id, page_type)
+            key = f"insights:{store_id}:{page_type}"
+            ttl = await redis_client.ttl(key) if cached_data else -2
+
+            cache_status[page_type] = {
+                "cached": cached_data is not None,
+                "ttl_seconds": ttl,
+                "generated_at": cached_data.get("generated_at")
+                if cached_data
+                else None,
+            }
+
+        return {
+            "store_id": store_id,
+            "cache_status": cache_status,
+            "redis_connected": await redis_client.ping(),
+        }
+    except Exception as e:
+        logger.error(f"Error checking cache status: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to check cache status: {str(e)}",
         )
 
 

@@ -4,7 +4,7 @@ Analytics service for aggregating restaurant data.
 
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, List, Any, Optional
+from typing import Dict, Any, Optional
 
 from sqlalchemy import select, func, and_, cast, Date
 from sqlalchemy.ext.asyncio import AsyncSession

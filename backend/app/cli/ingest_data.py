@@ -7,7 +7,6 @@ import argparse
 import logging
 from pathlib import Path
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import AsyncSessionLocal
 from app.services.data_loader import load_all_data

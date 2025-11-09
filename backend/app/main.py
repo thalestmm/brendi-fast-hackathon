@@ -4,11 +4,10 @@ Main entry point for the FastAPI application.
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, status
 from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging_config import setup_logging

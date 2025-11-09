@@ -6,8 +6,6 @@ RQ Worker entrypoint for processing background jobs, including buffered messages
 
 import sys
 import time
-import os
-from pathlib import Path
 
 # Add the app directory to Python path
 sys.path.insert(0, "/app")
@@ -42,7 +40,6 @@ def warmup_services():
 
     try:
         # Initialize database connection
-        from app.core.database import AsyncSessionLocal
 
         logger.info("Initializing database connection...")
         # Test connection by creating a session (though we won't use it)
@@ -51,8 +48,6 @@ def warmup_services():
 
         # Initialize ChromaDB connection if needed
         try:
-            from app.services.chroma_service import get_collection_count
-
             # Test ChromaDB connection
             # This will fail gracefully if ChromaDB is not available
             logger.info("Testing ChromaDB connection...")

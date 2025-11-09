@@ -6,7 +6,6 @@ import logging
 from typing import List, Dict, Any, Optional
 
 from app.services.chroma_service import query_collection, get_collection_count
-from app.services.embedding_service import generate_embedding_single
 
 logger = logging.getLogger(__name__)
 

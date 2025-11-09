@@ -6,7 +6,7 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from uuid import uuid4
 
 from sqlalchemy import select
@@ -154,7 +154,7 @@ async def load_store_data(session: AsyncSession, file_path: Path, store_id: str)
         session.add(store)
         await session.commit()
 
-    logger.info(f"Loaded 1 store record")
+    logger.info("Loaded 1 store record")
     return 1
 
 

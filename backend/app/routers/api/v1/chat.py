@@ -4,8 +4,6 @@ Chat API endpoints.
 
 import logging
 from datetime import datetime
-from typing import List
-import uuid
 
 from fastapi import APIRouter, HTTPException, status
 from sqlalchemy import select, func

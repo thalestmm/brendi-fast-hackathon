@@ -3,16 +3,14 @@ WebSocket endpoints for real-time chat.
 """
 
 import logging
-import json
 import uuid
 from datetime import datetime
 from typing import Dict, Any
 
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, HTTPException, status
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from sqlalchemy import select
 
-from app.models.chat import ChatSession, ChatMessage
-from app.services.agent_service import process_message
+from app.models.chat import ChatSession
 
 logger = logging.getLogger(__name__)
 

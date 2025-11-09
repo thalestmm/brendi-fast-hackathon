@@ -3,9 +3,8 @@ Store model for restaurant/store information.
 """
 
 from sqlalchemy import String, Index
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
-import uuid
 
 from app.core.database import Base
 

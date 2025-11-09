@@ -4,12 +4,10 @@ LangGraph agent for restaurant management AI assistant.
 
 import logging
 from typing import Dict, Any, List, TypedDict, Annotated
-from datetime import datetime
 
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, SystemMessage
+from langchain_core.messages import BaseMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolNode
 
 from app.core.config import settings
 from app.graphs.tools.calculator import calculator_tool

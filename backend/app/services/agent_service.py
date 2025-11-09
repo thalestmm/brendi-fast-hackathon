@@ -4,7 +4,7 @@ Service for interacting with the LangGraph agent.
 
 import logging
 import uuid
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, List
 from datetime import datetime
 
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
@@ -12,7 +12,6 @@ from typing import TypedDict, Annotated, List as TypedList
 from langchain_core.messages import BaseMessage as LangChainBaseMessage
 
 from app.graphs.agent import graph
-from app.core.database import AsyncSessionLocal
 from app.core.config import settings
 from app.models.chat import ChatSessionState
 from sqlalchemy import select

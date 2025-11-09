@@ -24,7 +24,9 @@ class CacheService:
     """Service for managing cached data in Redis."""
 
     def __init__(self):
+        """Initialize the cache service with Redis connection."""
         self.redis = get_async_redis_connection()
+        logger.debug("CacheService initialized")
 
     async def get_insight(
         self, store_id: str, page_type: str
@@ -43,12 +45,14 @@ class CacheService:
         try:
             cached_data = await self.redis.get(key)
             if cached_data:
-                logger.debug(f"Cache hit for insight: {key}")
+                logger.info(f"✓ Cache hit for insight: {key}")
                 return json.loads(cached_data)
-            logger.debug(f"Cache miss for insight: {key}")
+            logger.info(f"✗ Cache miss for insight: {key}")
             return None
         except Exception as e:
-            logger.error(f"Error retrieving cached insight: {e}")
+            logger.error(
+                f"Error retrieving cached insight for {key}: {e}", exc_info=True
+            )
             return None
 
     async def set_insight(
@@ -79,10 +83,10 @@ class CacheService:
         }
         try:
             await self.redis.setex(key, ttl, json.dumps(data))
-            logger.debug(f"Cached insight for {key} with TTL {ttl}s")
+            logger.info(f"✓ Cached insight for {key} with TTL {ttl}s")
             return True
         except Exception as e:
-            logger.error(f"Error caching insight: {e}")
+            logger.error(f"✗ Error caching insight for {key}: {e}", exc_info=True)
             return False
 
     async def delete_insight(self, store_id: str, page_type: str) -> bool:

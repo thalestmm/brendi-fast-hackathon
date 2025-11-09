@@ -3,9 +3,9 @@ LangGraph graph for generating insights for dashboard pages.
 """
 
 import logging
-from typing import Dict, Any, TypedDict, Annotated, List
+from typing import Dict, Any, TypedDict
 
-from langchain_core.messages import BaseMessage, SystemMessage, HumanMessage, AIMessage
+from langchain_core.messages import SystemMessage, HumanMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 
@@ -209,7 +209,7 @@ async def generate_insight_for_page(store_id: str, page_type: str) -> str:
 
     except Exception as e:
         logger.error(f"Error generating insight: {e}", exc_info=True)
-        return f"Unable to generate insights at this time. Please try again later."
+        return "Unable to generate insights at this time. Please try again later."
 
 
 __all__ = ["generate_insight_for_page", "insights_graph", "graph"]

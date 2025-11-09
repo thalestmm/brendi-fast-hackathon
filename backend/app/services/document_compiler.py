@@ -4,7 +4,6 @@ Service for compiling documents from PostgreSQL data for Chroma RAG.
 
 import logging
 from typing import List, Dict, Any
-from datetime import datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession

@@ -1,6 +1,6 @@
 import logging
 from pathlib import Path
-from typing import Any, Optional, Literal
+from typing import Optional, Literal
 
 from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings

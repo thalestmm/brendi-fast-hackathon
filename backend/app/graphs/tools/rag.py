@@ -3,7 +3,7 @@ RAG tool for querying vector database.
 """
 
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Optional, List
 
 from langchain_core.tools import tool
 
