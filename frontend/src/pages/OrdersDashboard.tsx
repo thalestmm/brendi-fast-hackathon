@@ -134,7 +134,7 @@ export function OrdersDashboard() {
           )}
         </div>
 
-        <div className="card" style={{ gridColumn: 'span 2' }}>
+        <div className="card" style={{ gridColumn: '1 / -1' }}>
           <h3 className="card-title">Pedidos por Status</h3>
           {data.orders_by_status.length > 0 ? (
             <OrdersByStatusChart data={data.orders_by_status} />
@@ -143,7 +143,7 @@ export function OrdersDashboard() {
           )}
         </div>
 
-        <div className="card" style={{ gridColumn: 'span 2' }}>
+        <div className="card" style={{ gridColumn: '1 / -1' }}>
           <h3 className="card-title">Bairros com Mais Pedidos</h3>
           {data.top_delivery_areas.length > 0 ? (
             <TopDeliveryAreasChart data={data.top_delivery_areas} />

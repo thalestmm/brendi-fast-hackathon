@@ -27,7 +27,7 @@ from app.graphs.nodes.tools import create_tools_node_dynamic
 logger = logging.getLogger(__name__)
 
 # Agent configuration
-MODEL_NAME = "gpt-5-mini"  # Use cost-effective model
+MODEL_NAME = "gpt-5"  # Use cost-effective model
 MAX_TOKENS = 8000
 TEMPERATURE = 0.7
 

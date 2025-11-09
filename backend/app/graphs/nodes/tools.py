@@ -9,6 +9,8 @@ from typing import Dict, Any
 from langchain_core.messages import ToolMessage, AIMessage
 from langgraph.prebuilt import ToolNode
 
+from app.graphs.utils import normalize_currency_for_llm
+
 logger = logging.getLogger(__name__)
 
 
@@ -178,11 +180,17 @@ async def create_tools_node_dynamic(state: Dict[str, Any]) -> Dict[str, Any]:
                 if tool:
                     try:
                         result = await tool.ainvoke(tool_args)
+                        normalized_result = normalize_currency_for_llm(result)
+                        if isinstance(result, (dict, list)):
+                            content = json.dumps(
+                                normalized_result, ensure_ascii=False, default=str
+                            )
+                        else:
+                            content = str(normalized_result)
+
                         tool_messages.append(
                             ToolMessage(
-                                content=json.dumps(result, ensure_ascii=False)
-                                if isinstance(result, (dict, list))
-                                else str(result),
+                                content=content,
                                 tool_call_id=tool_call.get("id"),
                             )
                         )

@@ -19,11 +19,12 @@ from app.services.analytics_service import (
     get_menu_events_analytics,
 )
 from app.core.database import AsyncSessionLocal
+from app.graphs.utils import normalize_currency_for_llm
 
 logger = logging.getLogger(__name__)
 
 # Agent configuration
-MODEL_NAME = "gpt-5-mini"
+MODEL_NAME = "gpt-5"
 MAX_TOKENS = 3000
 TEMPERATURE = 0.7
 
@@ -184,11 +185,13 @@ async def generate_insight_for_page(store_id: str, page_type: str) -> str:
             else:
                 analytics_data = {}
 
+        analytics_data_for_llm = normalize_currency_for_llm(analytics_data)
+
         # Prepare initial state
         initial_state: InsightsState = {
             "page_type": page_type,
             "store_id": store_id,
-            "analytics_data": analytics_data,
+            "analytics_data": analytics_data_for_llm,
             "rag_context": "",
             "insight": "",
         }

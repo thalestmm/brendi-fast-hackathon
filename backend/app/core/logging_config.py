@@ -56,12 +56,19 @@ def setup_logging(
     # File handler with rotation (if log file path is provided)
     if log_file_path:
         try:
-            # Ensure the log directory exists
             log_path = Path(log_file_path)
-            log_path.parent.mkdir(parents=True, exist_ok=True)
+
+            if log_path.suffix:
+                # Looks like a file path, ensure parent directory exists
+                log_path.parent.mkdir(parents=True, exist_ok=True)
+                resolved_log_path = log_path
+            else:
+                # Treat as directory and create a file name based on the service
+                log_path.mkdir(parents=True, exist_ok=True)
+                resolved_log_path = log_path / f"{service_name}.log"
 
             file_handler = RotatingFileHandler(
-                filename=log_file_path,
+                filename=str(resolved_log_path),
                 maxBytes=max_bytes,
                 backupCount=backup_count,
                 encoding="utf-8",
@@ -70,7 +77,7 @@ def setup_logging(
             file_handler.setFormatter(detailed_formatter)
             root_logger.addHandler(file_handler)
 
-            root_logger.info(f"File logging enabled: {log_file_path}")
+            root_logger.info(f"File logging enabled: {resolved_log_path}")
             root_logger.info(
                 f"Log rotation: max_bytes={max_bytes}, backup_count={backup_count}"
             )
