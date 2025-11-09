@@ -2,3 +2,258 @@
 data/
 .data/
 data
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Translations
+*.mo
+*.pot
+
+# Django stuff:
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+
+# Flask stuff:
+instance/
+.webassets-cache
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+docs/.doctrees/
+
+# PyBuilder
+target/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IPython
+profile_default/
+ipython_config.py
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery stuff
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.envrc
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# IDE and editor settings
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+*.sublime-project
+*.sublime-workspace
+.vs/
+
+# OS specific files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# Secrets and credentials
+etc/secrets/
+secrets/
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+postgres-data/
+redis-data/
+
+# Docker volumes and data
+docker-data/
+.docker/
+
+# Alembic
+alembic/versions/*.pyc
+
+# LangGraph Studio
+.langgraph_api/
+
+# Ruff
+.ruff_cache/
+
+# Logs
+logs/
+log/
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+*~
+
+# Local development overrides
+docker-compose.override.yml
+docker-compose.local.yml
+
+# Profiling data
+*.prof
+.prof/
+
+# Static files (if collected)
+staticfiles/
+static_root/
+media/
+
+# Locust performance testing
+locust-report.html
+locust-stats.csv
+
+# Prometheus data (if running locally)
+prometheus-data/
+
+# Grafana data (if running locally)
+grafana-data/
+
+# Redis dump
+dump.rdb
+
+# PostgreSQL dumps
+*.sql.gz
+*.dump
+
+# Backup files
+*.bak
+*.backup
+backup/
+
+# Generated API documentation
+openapi.json.bak
+openapi.yaml.bak
+
+# Python virtual environment markers
+pyvenv.cfg
+
+# uv package manager
+.uv/
+
+# pdm
+.pdm.toml
+.pdm-python
+__pypackages__/
+
+# Hatch
+.hatch/
+
+# Poetry
+poetry.lock
+
+# Certificates for local development
+certs/
+*.csr
+
+# Task queue data
+celery-data/
+asynq-data/
+
+# Monitoring and observability
+traces/
+metrics/
