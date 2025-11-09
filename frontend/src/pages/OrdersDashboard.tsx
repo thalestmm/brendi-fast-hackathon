@@ -6,9 +6,7 @@ import { useEffect, useState } from 'react';
 import { analyticsService } from '../services/analytics';
 import { InsightsCard } from '../components/InsightsCard';
 import {
-  OrdersChart,
   OrdersByDayOfWeekChart,
-  OrdersByHourChart,
   OrderValueDistributionChart,
   TopMenuItemsChart,
   OrdersByStatusChart,
@@ -87,33 +85,19 @@ export function OrdersDashboard() {
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="card">
-        <h3 className="card-title">Pedidos ao Longo do Tempo</h3>
-        <OrdersChart data={data.daily_data} />
-      </div>
-
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
           gap: '24px',
           marginTop: '24px',
+          alignItems: 'stretch',
         }}
       >
         <div className="card">
           <h3 className="card-title">Pedidos por Dia da Semana</h3>
           {data.orders_by_day_of_week.length > 0 ? (
             <OrdersByDayOfWeekChart data={data.orders_by_day_of_week} />
-          ) : (
-            <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
-          )}
-        </div>
-
-        <div className="card">
-          <h3 className="card-title">Pedidos por Horário</h3>
-          {data.orders_by_hour.length > 0 ? (
-            <OrdersByHourChart data={data.orders_by_hour} />
           ) : (
             <div style={{ padding: '16px', color: '#777', fontSize: '14px' }}>Sem dados suficientes.</div>
           )}
@@ -137,7 +121,7 @@ export function OrdersDashboard() {
           )}
         </div>
 
-        <div className="card">
+        <div className="card" style={{ gridColumn: 'span 2' }}>
           <h3 className="card-title">Pedidos por Status</h3>
           {data.orders_by_status.length > 0 ? (
             <OrdersByStatusChart data={data.orders_by_status} />
@@ -146,7 +130,7 @@ export function OrdersDashboard() {
           )}
         </div>
 
-        <div className="card">
+        <div className="card" style={{ gridColumn: 'span 2' }}>
           <h3 className="card-title">Bairros com Mais Pedidos</h3>
           {data.top_delivery_areas.length > 0 ? (
             <TopDeliveryAreasChart data={data.top_delivery_areas} />
