@@ -42,6 +42,7 @@ The AI agent assists restaurant managers by:
 - Cache frequent queries to improve response time
 - Handle errors gracefully with user-friendly messages
 - Log all agent interactions for debugging and improvement
+- There will be no long-term memory. We will simply use the n last message (defined in config.settings) and the available RAG data, per store.
 
 ## Data Architecture
 
@@ -87,6 +88,7 @@ The `/data` directory contains sample restaurant data:
 - Structured logging with proper levels
 - Error handling with meaningful messages
 - CI/CD with GitHub Actions
+- Message buffering: The user can send multiple messages in a row, but we should process them as only one. That is, once a new message is sent, add it to a buffering queue with a process_datetime key set to a settings value. If another message comes in before expiration, append it to the queue and reset the timer. If no messages come, the RQ worker must pickup all the messages and process them as one. For the frontend, in this moment there should appear a 'typing...' indicator to reduce the perception latency.
 
 #### Testing & Quality
 - Write simple, focused tests for critical paths

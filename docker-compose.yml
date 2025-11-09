@@ -22,6 +22,7 @@ services:
       - 8000:8000
     volumes:
       - backend_data:/app/logs
+      - ./backend/data:/data:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -57,7 +58,7 @@ services:
       - CHROMA_API_TOKEN=${CHROMA_API_TOKEN:-admin}
       - CHROMA_COLLECTION_NAME=${CHROMA_COLLECTION_NAME:-rag_data}
       
-      # PostgreSQL configuration (must be provided via environment variable)
+      # PostgreSQL configuration (external database)
       - DATABASE_URL=${DATABASE_URL}
       - DB_POOL_SIZE=${DB_POOL_SIZE:-5}
       - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-10}
@@ -77,6 +78,25 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        - VITE_API_BASE_URL=
+        - VITE_DEFAULT_STORE_ID=${STORE_ID:-0WcZ1MWEaFc1VftEBdLa}
+    container_name: frontend
+    ports:
+      - 3000:80
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
       start_period: 10s
 
 volumes:

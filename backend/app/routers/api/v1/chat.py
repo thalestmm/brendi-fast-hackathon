@@ -34,8 +34,7 @@ async def send_message(
     """
     Send a message to the AI agent.
 
-    TODO: Integrate with LangGraph agent to process messages.
-    For now, returns a placeholder response.
+    Processes the message through the LangGraph agent with RAG context retrieval.
     """
     # Get or create session
     session_id = request.session_id
@@ -73,9 +72,15 @@ async def send_message(
     db.add(user_message)
     await db.flush()
 
-    # TODO: Process message with LangGraph agent
-    # For now, return placeholder response
-    assistant_response = "I'm here to help! This is a placeholder response. Chat functionality will be fully implemented soon."
+    # Process message with LangGraph agent
+    from app.services.agent_service import process_message
+    
+    assistant_response = await process_message(
+        session=db,
+        session_id=session_id,
+        store_id=store_id,
+        user_message=request.message,
+    )
 
     # Save assistant message
     assistant_message = ChatMessage(

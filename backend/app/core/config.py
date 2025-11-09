@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     STORE_ID: str = Field(default="0WcZ1MWEaFc1VftEBdLa")
     AUTO_INGEST_DATA: bool = Field(default=True)
 
+    # Agent configuration
+    AGENT_MESSAGE_HISTORY_LIMIT: int = Field(default=10)
+
     model_config = ConfigDict(
         env_file=ENV_FILE,
         env_file_encoding="utf-8",

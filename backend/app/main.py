@@ -58,13 +58,18 @@ async def lifespan(app: FastAPI):
                 async with AsyncSessionLocal() as session:
                     # Load data into PostgreSQL
                     logger.info("Loading data into PostgreSQL...")
-                    results = await load_all_data(
-                        session, settings.DATA_DIR, settings.STORE_ID, skip_chroma=True
-                    )
+                    try:
+                        results = await load_all_data(
+                            session, settings.DATA_DIR, settings.STORE_ID, skip_chroma=True
+                        )
 
-                    logger.info("Data loading summary:")
-                    for data_type, count in results.items():
-                        logger.info(f"  {data_type}: {count} records")
+                        logger.info("Data loading summary:")
+                        for data_type, count in results.items():
+                            logger.info(f"  {data_type}: {count} records")
+                    except Exception as e:
+                        logger.error(f"Error during data loading: {e}", exc_info=True)
+                        logger.warning("Continuing with document compilation despite errors")
+                        results = {}
 
                     # Compile documents for Chroma
                     logger.info("Compiling documents for Chroma...")

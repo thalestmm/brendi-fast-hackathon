@@ -6,7 +6,8 @@ import json
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any, Optional
+from typing import Any, Dict, List, Optional
+from uuid import uuid4
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -52,6 +53,60 @@ def parse_json_string(json_str: str) -> Dict[str, Any]:
         return {}
 
 
+def normalize_order_uuid(order_id: str, raw_uuid: Any) -> str:
+    """Ensure orders always have a usable UUID value."""
+    fallback_id = (order_id or "").strip()
+    if not fallback_id:
+        fallback_id = f"missing-order-{uuid4().hex}"
+
+    if raw_uuid is None:
+        candidate = ""
+    elif isinstance(raw_uuid, str):
+        candidate = raw_uuid.strip()
+    else:
+        candidate = str(raw_uuid).strip()
+
+    if not candidate:
+        return f"{fallback_id}_generated_uuid"
+
+    return candidate
+
+
+async def ensure_unique_order_uuid(
+    session: AsyncSession, order_id: str, desired_uuid: str
+) -> str:
+    """
+    Guarantee that the UUID we persist will not violate the unique constraint.
+    """
+    base_uuid = desired_uuid or f"{order_id}_generated_uuid"
+    candidate = base_uuid
+    suffix = 0
+
+    while True:
+        existing = await session.execute(
+            select(Order.id).where(Order.uuid == candidate)
+        )
+        existing_id = existing.scalar_one_or_none()
+
+        if existing_id is None or existing_id == order_id:
+            return candidate
+
+        suffix += 1
+        next_candidate = f"{base_uuid}_dup_{order_id}"
+        if suffix > 1:
+            next_candidate = f"{next_candidate}_{suffix}"
+
+        logger.debug(
+            "UUID %s already exists for order %s; using fallback %s for order %s",
+            candidate,
+            existing_id,
+            next_candidate,
+            order_id,
+        )
+
+        candidate = next_candidate
+
+
 async def load_store_data(session: AsyncSession, file_path: Path, store_id: str) -> int:
     """
     Load store data from JSON file.
@@ -81,21 +136,23 @@ async def load_store_data(session: AsyncSession, file_path: Path, store_id: str)
         "raw_data": data,  # Store complete original data
     }
 
-    # Upsert store
-    stmt = insert(Store).values(**store_data)
-    stmt = stmt.on_conflict_do_update(
-        index_elements=["id"],
-        set_={
-            "uuid": stmt.excluded.uuid,
-            "name": stmt.excluded.name,
-            "cnpj": stmt.excluded.cnpj,
-            "status": stmt.excluded.status,
-            "raw_data": stmt.excluded.raw_data,
-        },
+    # Upsert store - check if exists first to avoid UUID conflicts
+    existing_store = await session.execute(
+        select(Store).where(Store.id == store_data["id"])
     )
-
-    await session.execute(stmt)
-    await session.commit()
+    existing = existing_store.scalar_one_or_none()
+    
+    if existing:
+        # Update existing store
+        for key, value in store_data.items():
+            if key != "id":  # Don't update the ID
+                setattr(existing, key, value)
+        await session.commit()
+    else:
+        # Insert new store
+        store = Store(**store_data)
+        session.add(store)
+        await session.commit()
 
     logger.info(f"Loaded 1 store record")
     return 1
@@ -121,8 +178,16 @@ async def load_orders_data(
     """
     logger.info(f"Loading orders data from {file_path}")
 
-    with open(file_path, "r", encoding="utf-8") as f:
-        orders = json.load(f)
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            orders = json.load(f)
+    except json.JSONDecodeError as e:
+        logger.error(f"Error parsing orders JSON file: {e}")
+        logger.error(f"Error at line {e.lineno}, column {e.colno}")
+        return 0
+    except Exception as e:
+        logger.error(f"Error reading orders file: {e}")
+        return 0
 
     if not isinstance(orders, list):
         logger.error("Orders data must be a list")
@@ -137,9 +202,16 @@ async def load_orders_data(
         for order in batch:
             created_at = parse_date(order.get("createdAt"))
 
+            raw_order_id = order.get("id")
+            order_id = ""
+            if raw_order_id is not None:
+                order_id = str(raw_order_id).strip()
+            if not order_id:
+                order_id = f"missing-order-{uuid4().hex}"
+
             order_data = {
-                "id": order.get("id", ""),
-                "uuid": order.get("uuid", ""),
+                "id": order_id,
+                "uuid": normalize_order_uuid(order_id, order.get("uuid")),
                 "code": order.get("code"),
                 "store_id": store_id,
                 "total_price": order.get("totalPrice"),
@@ -150,25 +222,43 @@ async def load_orders_data(
             order_records.append(order_data)
 
         if order_records:
-            stmt = insert(Order).values(order_records)
-            stmt = stmt.on_conflict_do_update(
-                index_elements=["id"],
-                set_={
-                    "uuid": stmt.excluded.uuid,
-                    "code": stmt.excluded.code,
-                    "total_price": stmt.excluded.total_price,
-                    "created_at": stmt.excluded.created_at,
-                    "products": stmt.excluded.products,
-                    "raw_data": stmt.excluded.raw_data,
-                },
-            )
-            await session.execute(stmt)
-            await session.commit()
+            # Insert orders one by one to handle UUID conflicts gracefully
+            for order_data in order_records:
+                try:
+                    # Check if order exists by id
+                    existing = await session.execute(
+                        select(Order).where(Order.id == order_data["id"])
+                    )
+                    existing_order = existing.scalar_one_or_none()
+                    
+                    if existing_order:
+                        # Update existing order (skip UUID to avoid conflicts)
+                        existing_order.code = order_data.get("code")
+                        existing_order.total_price = order_data.get("total_price")
+                        existing_order.created_at = order_data.get("created_at")
+                        existing_order.products = order_data.get("products")
+                        existing_order.raw_data = order_data.get("raw_data")
+                        # Don't update UUID if it would cause a conflict
+                    else:
+                        order_data["uuid"] = await ensure_unique_order_uuid(
+                            session, order_data["id"], order_data.get("uuid")
+                        )
 
-            total_loaded += len(order_records)
-            logger.info(
-                f"Loaded batch {i // batch_size + 1}: {len(order_records)} orders (total: {total_loaded})"
-            )
+                        # Insert new order
+                        order = Order(**order_data)
+                        session.add(order)
+                    
+                    await session.commit()
+                    total_loaded += 1
+                except Exception as e:
+                    await session.rollback()
+                    logger.warning(f"Skipping order {order_data.get('id', 'unknown')}: {e}")
+                    continue
+            
+            if total_loaded > 0 and total_loaded % batch_size == 0:
+                logger.info(
+                    f"Loaded batch {i // batch_size + 1}: {batch_size} orders (total: {total_loaded})"
+                )
 
     logger.info(f"Loaded {total_loaded} orders total")
     return total_loaded
@@ -551,15 +641,23 @@ async def load_all_data(
     # Load store data
     store_file = data_dir / "store.json"
     if store_file.exists():
-        results["store"] = await load_store_data(session, store_file, store_id)
+        try:
+            results["store"] = await load_store_data(session, store_file, store_id)
+        except Exception as e:
+            logger.error(f"Error loading store data: {e}", exc_info=True)
+            results["store"] = 0
     else:
         logger.warning(f"Store file not found: {store_file}")
         results["store"] = 0
 
-    # Load orders
+    # Load orders (handle large file errors gracefully)
     orders_file = data_dir / "orders.json"
     if orders_file.exists():
-        results["orders"] = await load_orders_data(session, orders_file, store_id)
+        try:
+            results["orders"] = await load_orders_data(session, orders_file, store_id)
+        except Exception as e:
+            logger.error(f"Error loading orders data: {e}", exc_info=True)
+            results["orders"] = 0
     else:
         logger.warning(f"Orders file not found: {orders_file}")
         results["orders"] = 0

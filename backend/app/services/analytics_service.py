@@ -58,22 +58,25 @@ async def get_order_analytics(
     if not end_date:
         end_date = datetime.now()
 
-    # Use date_trunc for PostgreSQL compatibility
+    # Use CAST to DATE for PostgreSQL compatibility
+    # This avoids GROUP BY issues with date_trunc expressions
+    date_expr = cast(Order.created_at, Date)
+    
     daily_orders_stmt = (
         select(
-            func.date_trunc("day", Order.created_at).label("date"),
+            date_expr.label("date"),
             func.count(Order.id).label("count"),
             func.sum(Order.total_price).label("revenue"),
         )
         .where(and_(*conditions))
-        .group_by(func.date_trunc("day", Order.created_at))
-        .order_by(func.date_trunc("day", Order.created_at))
+        .group_by(date_expr)
+        .order_by(date_expr)
     )
-
+    
     daily_result = await session.execute(daily_orders_stmt)
     daily_data = [
         {
-            "date": row.date.date().isoformat() if row.date else None,
+            "date": row.date.isoformat() if row.date else None,
             "orders": row.count,
             "revenue": int(row.revenue) if row.revenue else 0,
         }
