@@ -268,9 +268,96 @@ async def get_feedback_analytics(
     }
 
 
+async def get_menu_events_analytics(
+    session: AsyncSession,
+    store_id: str,
+    start_date: Optional[datetime] = None,
+    end_date: Optional[datetime] = None,
+) -> Dict[str, Any]:
+    """
+    Get menu interaction analytics for a store.
+
+    Args:
+        session: Database session
+        store_id: Store ID
+        start_date: Optional start datetime filter
+        end_date: Optional end datetime filter
+
+    Returns:
+        Dictionary with menu event analytics
+    """
+    conditions = [MenuEvent.store_id == store_id]
+
+    if start_date:
+        conditions.append(MenuEvent.timestamp >= start_date)
+    if end_date:
+        conditions.append(MenuEvent.timestamp <= end_date)
+
+    total_stmt = select(func.count(MenuEvent.id)).where(and_(*conditions))
+    total_result = await session.execute(total_stmt)
+    total_events = total_result.scalar() or 0
+
+    events_by_type_stmt = (
+        select(
+            MenuEvent.event_type,
+            func.count(MenuEvent.id).label("count"),
+        )
+        .where(and_(*conditions))
+        .group_by(MenuEvent.event_type)
+    )
+    events_by_type_result = await session.execute(events_by_type_stmt)
+    events_by_type = {
+        (row.event_type or "unknown"): row.count for row in events_by_type_result.all()
+    }
+
+    events_by_device_stmt = (
+        select(
+            MenuEvent.device_type,
+            func.count(MenuEvent.id).label("count"),
+        )
+        .where(and_(*conditions))
+        .group_by(MenuEvent.device_type)
+    )
+    events_by_device_result = await session.execute(events_by_device_stmt)
+    events_by_device_type = {
+        (row.device_type or "unknown"): row.count
+        for row in events_by_device_result.all()
+    }
+
+    events_by_platform_stmt = (
+        select(
+            MenuEvent.platform,
+            func.count(MenuEvent.id).label("count"),
+        )
+        .where(and_(*conditions))
+        .group_by(MenuEvent.platform)
+    )
+    events_by_platform_result = await session.execute(events_by_platform_stmt)
+    events_by_platform = {
+        (row.platform or "unknown"): row.count
+        for row in events_by_platform_result.all()
+    }
+
+    # Default to last 30 days for period reporting if not provided
+    period_start = start_date or (datetime.now() - timedelta(days=30))
+    period_end = end_date or datetime.now()
+
+    return {
+        "total_events": total_events,
+        "events_by_type": events_by_type,
+        "events_by_device_type": events_by_device_type,
+        "events_by_platform": events_by_platform,
+        "period": {
+            "start": period_start.isoformat() if period_start else None,
+            "end": period_end.isoformat() if period_end else None,
+        },
+    }
+
+
 __all__ = [
     "get_order_analytics",
     "get_campaign_analytics",
     "get_consumer_analytics",
     "get_feedback_analytics",
+    "get_menu_events_analytics",
 ]

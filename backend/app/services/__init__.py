@@ -38,6 +38,11 @@ from app.services.data_loader import (
 from app.services.document_compiler import (
     compile_all_documents_for_store,
 )
+from app.services.cache_service import (
+    CacheService,
+    get_cache_service,
+    DEFAULT_INSIGHTS_TTL,
+)
 
 __all__ = [
     # Analytics
@@ -72,4 +77,8 @@ __all__ = [
     "load_all_data",
     # Document compilation
     "compile_all_documents_for_store",
+    # Cache
+    "CacheService",
+    "get_cache_service",
+    "DEFAULT_INSIGHTS_TTL",
 ]

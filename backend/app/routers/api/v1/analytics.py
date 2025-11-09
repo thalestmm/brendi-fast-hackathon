@@ -120,13 +120,41 @@ async def get_insights(
     Get AI-generated insights for a dashboard page.
 
     Uses LangGraph agent with RAG context to generate actionable insights.
+    Results are cached for 5 minutes to improve performance.
     """
     from app.graphs.insights import generate_insight_for_page
+    from app.services.cache_service import get_cache_service
+
+    cache_service = get_cache_service()
 
     try:
+        # Check cache first
+        cached_data = await cache_service.get_insight(
+            store_id=store_id,
+            page_type=request.page_type,
+        )
+        
+        if cached_data:
+            logger.info(f"Returning cached insight for {store_id}:{request.page_type}")
+            return InsightResponse(
+                insight=cached_data["insight"],
+                page_type=cached_data["page_type"],
+                generated_at=datetime.fromisoformat(cached_data["generated_at"]),
+            )
+
+        # Generate new insight if not cached
+        logger.info(f"Generating new insight for {store_id}:{request.page_type}")
         insight_text = await generate_insight_for_page(
             store_id=store_id,
             page_type=request.page_type,
+        )
+
+        # Cache the result
+        await cache_service.set_insight(
+            store_id=store_id,
+            page_type=request.page_type,
+            insight=insight_text,
+            ttl=300,  # 5 minutes TTL
         )
 
         return InsightResponse(
@@ -141,4 +169,35 @@ async def get_insights(
             insight="Unable to generate insights at this time. Please try again later.",
             page_type=request.page_type,
             generated_at=datetime.now(),
+        )
+
+
+@router.delete("/insights/cache")
+async def clear_insights_cache(
+    store_id: StoreId,
+) -> dict:
+    """
+    Clear all cached insights for a store.
+
+    This endpoint allows administrators to invalidate the cache
+    when needed (e.g., after data updates).
+    """
+    from app.services.cache_service import get_cache_service
+
+    cache_service = get_cache_service()
+    
+    try:
+        deleted_count = await cache_service.clear_store_insights(store_id)
+        logger.info(f"Cleared {deleted_count} cached insights for store {store_id}")
+        
+        return {
+            "status": "success",
+            "message": f"Cleared {deleted_count} cached insights",
+            "store_id": store_id,
+        }
+    except Exception as e:
+        logger.error(f"Error clearing insights cache: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to clear insights cache",
         )

@@ -134,3 +134,37 @@ async def reindex_chroma(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to reindex Chroma: {str(e)}",
         )
+
+
+@router.post("/load-all")
+async def load_all_data_endpoint(
+    store_id: StoreId,
+    db: DbSession,
+) -> Dict[str, Any]:
+    """
+    Load all data from JSON files into PostgreSQL.
+    
+    This endpoint is for development/debugging purposes.
+    """
+    from app.services.data_loader import load_all_data
+    from app.core.config import settings
+    
+    try:
+        results = await load_all_data(
+            session=db,
+            data_dir=settings.DATA_DIR,
+            store_id=store_id,
+            skip_chroma=True,
+        )
+        
+        return {
+            "status": "success",
+            "message": f"Data loaded for store {store_id}",
+            "results": results,
+        }
+    except Exception as e:
+        logger.error(f"Error loading data: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to load data: {str(e)}",
+        )

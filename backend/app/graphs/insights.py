@@ -140,6 +140,8 @@ def create_insights_graph() -> StateGraph:
 
 # Create the graph instance
 insights_graph = create_insights_graph().compile()
+# Alias for LangGraph platform expectations
+graph = insights_graph
 
 logger.info("Insights generation graph initialized successfully")
 
@@ -209,4 +211,4 @@ async def generate_insight_for_page(store_id: str, page_type: str) -> str:
         return f"Unable to generate insights at this time. Please try again later."
 
 
-__all__ = ["generate_insight_for_page", "insights_graph"]
+__all__ = ["generate_insight_for_page", "insights_graph", "graph"]

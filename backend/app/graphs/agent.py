@@ -10,7 +10,6 @@ from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, System
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
-from langgraph.checkpoint.memory import MemorySaver
 
 from app.core.config import settings
 from app.graphs.tools.calculator import calculator_tool
@@ -176,9 +175,8 @@ def create_graph() -> StateGraph:
     return workflow
 
 
-# Create the graph instance with memory checkpointing
-# Note: In production, use a persistent checkpoint store (e.g., PostgresCheckpoint)
-graph = create_graph().compile(checkpointer=MemorySaver())
+# Create the graph instance relying on platform-managed persistence
+graph = create_graph().compile()
 
 logger.info("LangGraph agent initialized successfully")
 
