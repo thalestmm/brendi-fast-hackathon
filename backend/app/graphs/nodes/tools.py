@@ -181,17 +181,27 @@ async def create_tools_node_dynamic(state: Dict[str, Any]) -> Dict[str, Any]:
                     try:
                         result = await tool.ainvoke(tool_args)
                         normalized_result = normalize_currency_for_llm(result)
-                        if isinstance(result, (dict, list)):
-                            content = json.dumps(
-                                normalized_result, ensure_ascii=False, default=str
+                        tool_call_id = tool_call.get("id") or tool_call.get(
+                            "tool_call_id"
+                        )
+                        if not tool_call_id:
+                            logger.warning(
+                                "No tool_call_id provided for tool %s", tool_name
                             )
+                            tool_call_id = tool_call.get("id") or tool_call.get(
+                                "tool_call_id"
+                            )
+
+                        if isinstance(normalized_result, (dict, list)):
+                            content = json.dumps(normalized_result, ensure_ascii=False)
                         else:
                             content = str(normalized_result)
 
                         tool_messages.append(
                             ToolMessage(
                                 content=content,
-                                tool_call_id=tool_call.get("id"),
+                                tool_call_id=tool_call_id,
+                                name=tool_name or None,
                             )
                         )
                     except Exception as e:
