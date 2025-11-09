@@ -23,21 +23,21 @@ COPY frontend/ ./
 # Build the application
 RUN npm run build
 
-# Production stage with Nginx
-FROM nginx:alpine
+# Production stage served via `serve`
+FROM node:20-alpine
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
+WORKDIR /app
 
-# Copy built files from builder
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Install lightweight static file server
+RUN npm install -g serve
 
-# Copy custom nginx configuration
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+# Copy built assets
+COPY --from=builder /app/dist ./dist
 
-# Expose port 80
+# Expose configurable port (defaults to 80)
+ENV PORT=80
 EXPOSE 80
 
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Run static server accessible on all interfaces
+CMD ["sh", "-c", "serve -s dist -l tcp://0.0.0.0:${PORT}"]
 
