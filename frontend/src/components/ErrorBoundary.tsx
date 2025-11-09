@@ -2,7 +2,7 @@
  * Error boundary to catch React errors and display a fallback UI.
  */
 
-import { Component, ReactNode } from 'react';
+import { Component, type ReactNode } from 'react';
 
 interface ErrorBoundaryState {
   hasError: boolean;
