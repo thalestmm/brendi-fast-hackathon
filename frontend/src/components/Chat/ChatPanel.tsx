@@ -15,6 +15,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [sessionId, setSessionId] = useState<string | undefined>();
+  const [typingIndicator, setTypingIndicator] = useState('.');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -24,6 +25,22 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    if (!loading) {
+      setTypingIndicator('.');
+      return;
+    }
+
+    const frames = ['.', '..', '...', '.'];
+    let frameIndex = 0;
+    const interval = window.setInterval(() => {
+      frameIndex = (frameIndex + 1) % frames.length;
+      setTypingIndicator(frames[frameIndex]);
+    }, 400);
+
+    return () => window.clearInterval(interval);
+  }, [loading]);
 
   const handleSend = async () => {
     if (!input.trim() || loading) return;
@@ -97,7 +114,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
           borderRadius: '12px 12px 0 0',
         }}
       >
-        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>Assistente IA</h3>
+        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '600' }}>Brenda</h3>
         <button
           onClick={onClose}
           style={{
@@ -167,7 +184,7 @@ export function ChatPanel({ onClose }: ChatPanelProps) {
                 backgroundColor: '#f0f0f0',
               }}
             >
-              Pensando...
+              {typingIndicator}
             </div>
           </div>
         )}

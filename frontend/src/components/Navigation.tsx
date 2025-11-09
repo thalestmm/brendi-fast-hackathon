@@ -35,7 +35,7 @@ export function Navigation() {
             marginRight: '40px',
           }}
         >
-          Analytics do Restaurante
+          Brendi [Dash]
         </Link>
         <div style={{ display: 'flex', gap: '8px' }}>
           {navItems.map((item) => (

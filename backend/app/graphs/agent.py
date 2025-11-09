@@ -4,10 +4,11 @@ LangGraph agent for restaurant management AI assistant.
 
 import logging
 from typing import Dict, Any, List, TypedDict, Annotated
+from datetime import datetime
 
 from langchain_core.messages import BaseMessage, AIMessage, SystemMessage
 from langchain_openai import ChatOpenAI
-from langgraph.graph import StateGraph, END
+from langgraph.graph import StateGraph, END, add_messages
 
 from app.core.config import settings
 from app.graphs.tools.calculator import calculator_tool
@@ -59,7 +60,7 @@ Remember: You're helping a restaurant manager, so focus on practical, implementa
 class AgentState(TypedDict):
     """State for the LangGraph agent."""
 
-    messages: Annotated[List[BaseMessage], "Chat messages"]
+    messages: Annotated[List[BaseMessage], add_messages]
     store_id: str
     rag_context: str
 
@@ -85,7 +86,9 @@ def create_system_message_with_context(
 
     localize = "IMPORTANT: Always answer in brazilian portuguese."
 
-    full_prompt = SYSTEM_PROMPT + context_section + localize
+    date_time = f"The current date and time is {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}."
+
+    full_prompt = SYSTEM_PROMPT + context_section + localize + date_time
     return SystemMessage(content=full_prompt)
 
 
@@ -102,6 +105,17 @@ def agent_node(state: AgentState) -> Dict[str, Any]:
         # Prepare messages with system prompt including RAG context and store_id
         system_msg = create_system_message_with_context(rag_context, store_id)
         agent_messages = [system_msg] + messages
+
+        # Debug message ordering to catch malformed histories
+        roles = [getattr(msg, "type", type(msg).__name__) for msg in agent_messages]
+        logger.info(f"Agent invoking with message roles: {roles}")
+        for idx, msg in enumerate(agent_messages):
+            logger.info(
+                "Message %s -> type=%s, class=%s",
+                idx,
+                getattr(msg, "type", type(msg).__name__),
+                msg.__class__.__name__,
+            )
 
         # Get available tools
         tools = [

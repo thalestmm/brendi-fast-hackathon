@@ -201,6 +201,10 @@ async def load_orders_data(
 
         for order in batch:
             created_at = parse_date(order.get("createdAt"))
+            
+            # Default to now if no date found
+            if created_at is None:
+                created_at = datetime.now()
 
             raw_order_id = order.get("id")
             order_id = ""
