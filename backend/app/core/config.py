@@ -36,6 +36,15 @@ class Settings(BaseSettings):
     LANGSMITH_API_KEY: Optional[str] = Field(default=None)
     LANGSMITH_TRACING_V2: bool = Field(default=True)
 
+    # Redis configuration
+    REDIS_HOST: str = Field(default="localhost")
+    REDIS_PORT: int = Field(default=6379)
+    REDIS_DB: int = Field(default=0)
+    REDIS_PASSWORD: Optional[str] = Field(default=None)
+
+    # RQ configuration
+    RQ_QUEUE_NAME: str = Field(default="default")
+
     model_config = ConfigDict(
         env_file=ENV_FILE,
         env_file_encoding="utf-8",
