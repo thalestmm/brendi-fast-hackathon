@@ -27,6 +27,9 @@ export function OrdersDashboard() {
         const analytics = await analyticsService.getOrders();
         setData({
           ...analytics,
+          total_orders: analytics.total_orders ?? 0,
+          total_revenue: analytics.total_revenue ?? 0,
+          average_order_value: analytics.average_order_value ?? 0,
           daily_data: analytics.daily_data ?? [],
           orders_by_day_of_week: analytics.orders_by_day_of_week ?? [],
           orders_by_hour: analytics.orders_by_hour ?? [],
