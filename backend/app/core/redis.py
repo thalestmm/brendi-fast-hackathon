@@ -14,11 +14,11 @@ from app.core.config import settings
 logger = logging.getLogger(__name__)
 
 # Redis Connection Instances
-_redis_sync_connection: Optional[aioredis.Redis] = None
+_redis_sync_connection: Optional[redis.Redis] = None
 _redis_async_connection: Optional[aioredis.AsyncRedis] = None
 
 
-def get_redis_connection() -> aioredis.Redis:
+def get_redis_connection() -> redis.Redis:
     """
     Singleton pattern to get the sync Redis client.
     """
@@ -115,4 +115,15 @@ def enqueue_job(
     return queue.enqueue(func, *args, **kwargs)
 
 
-__all__ = ["get_redis_client", "get_async_redis_client"]
+# Alias functions for backward compatibility
+get_redis_client = get_redis_connection
+get_async_redis_client = get_async_redis_connection
+
+__all__ = [
+    "get_redis_connection",
+    "get_async_redis_connection",
+    "get_queue",
+    "enqueue_job",
+    "get_redis_client",
+    "get_async_redis_client",
+]

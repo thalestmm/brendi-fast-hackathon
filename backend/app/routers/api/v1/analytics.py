@@ -119,24 +119,26 @@ async def get_insights(
     """
     Get AI-generated insights for a dashboard page.
 
-    TODO: Integrate with LangGraph agent to generate insights.
-    For now, returns a placeholder response.
+    Uses LangGraph agent with RAG context to generate actionable insights.
     """
-    # TODO: Implement actual insight generation using LangGraph agent
-    # This should query RAG service and generate insights based on analytics data
-
-    placeholder_insights = {
-        "orders": "Your order volume has been consistent. Consider analyzing peak hours to optimize staffing.",
-        "campaigns": "Campaign performance varies by type. Email campaigns show higher conversion rates.",
-        "consumers": "You have a strong base of repeat customers. Focus on retention strategies.",
-    }
-
-    insight_text = placeholder_insights.get(
-        request.page_type, "No insights available for this page type."
-    )
-
-    return InsightResponse(
-        insight=insight_text,
-        page_type=request.page_type,
-        generated_at=datetime.now(),
-    )
+    from app.graphs.insights import generate_insight_for_page
+    
+    try:
+        insight_text = await generate_insight_for_page(
+            store_id=store_id,
+            page_type=request.page_type,
+        )
+        
+        return InsightResponse(
+            insight=insight_text,
+            page_type=request.page_type,
+            generated_at=datetime.now(),
+        )
+    except Exception as e:
+        logger.error(f"Error generating insights: {e}", exc_info=True)
+        # Return fallback insight
+        return InsightResponse(
+            insight="Unable to generate insights at this time. Please try again later.",
+            page_type=request.page_type,
+            generated_at=datetime.now(),
+        )

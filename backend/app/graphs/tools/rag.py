@@ -14,8 +14,8 @@ logger = logging.getLogger(__name__)
 
 @tool
 def search_historical_data(
-    store_id: str,
-    query: str,
+    store_id: str = "",
+    query: str = "",
     content_types: Optional[List[str]] = None,
     top_k: int = 5,
 ) -> str:
@@ -25,8 +25,9 @@ def search_historical_data(
     This tool searches through orders, campaigns, customer feedback, menu events,
     and other restaurant data to find relevant context for answering questions.
     
+    Note: store_id is automatically provided - you don't need to specify it.
+    
     Args:
-        store_id: Store identifier
         query: Search query/question
         content_types: Optional list of content types to filter by 
                       (e.g., ['order', 'campaign', 'feedback'])

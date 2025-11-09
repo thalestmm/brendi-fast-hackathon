@@ -148,8 +148,14 @@ async def process_message(
         new_user_message = HumanMessage(content=user_message)
         messages.append(new_user_message)
         
-        # Prepare state
-        config = {"configurable": {"thread_id": thread_id}}
+        # Prepare state and config
+        # Include store_id in config for tool injection
+        config = {
+            "configurable": {
+                "thread_id": thread_id,
+                "store_id": store_id,  # Available for tool injection
+            }
+        }
         initial_state: AgentState = {
             "messages": messages,
             "store_id": store_id,

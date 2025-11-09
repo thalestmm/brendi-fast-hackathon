@@ -40,15 +40,16 @@ def _run_async(coro):
 
 @tool
 def get_order_analytics_tool(
-    store_id: str,
+    store_id: str = "",
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Get order analytics for a store.
     
+    Note: store_id is automatically provided - you don't need to specify it.
+    
     Args:
-        store_id: Store identifier
         start_date: Start date in ISO format (optional, defaults to 30 days ago)
         end_date: End date in ISO format (optional, defaults to now)
     
@@ -81,12 +82,11 @@ def get_order_analytics_tool(
 
 
 @tool
-def get_campaign_analytics_tool(store_id: str) -> Dict[str, Any]:
+def get_campaign_analytics_tool(store_id: str = "") -> Dict[str, Any]:
     """
     Get campaign analytics for a store.
     
-    Args:
-        store_id: Store identifier
+    Note: store_id is automatically provided - you don't need to specify it.
     
     Returns:
         Dictionary with campaign analytics including total_campaigns,
@@ -104,12 +104,11 @@ def get_campaign_analytics_tool(store_id: str) -> Dict[str, Any]:
 
 
 @tool
-def get_consumer_analytics_tool(store_id: str) -> Dict[str, Any]:
+def get_consumer_analytics_tool(store_id: str = "") -> Dict[str, Any]:
     """
     Get consumer analytics for a store.
     
-    Args:
-        store_id: Store identifier
+    Note: store_id is automatically provided - you don't need to specify it.
     
     Returns:
         Dictionary with consumer analytics including total_consumers,
@@ -127,12 +126,11 @@ def get_consumer_analytics_tool(store_id: str) -> Dict[str, Any]:
 
 
 @tool
-def get_feedback_analytics_tool(store_id: str) -> Dict[str, Any]:
+def get_feedback_analytics_tool(store_id: str = "") -> Dict[str, Any]:
     """
     Get customer feedback analytics for a store.
     
-    Args:
-        store_id: Store identifier
+    Note: store_id is automatically provided - you don't need to specify it.
     
     Returns:
         Dictionary with feedback analytics including total_feedbacks,
@@ -150,12 +148,11 @@ def get_feedback_analytics_tool(store_id: str) -> Dict[str, Any]:
 
 
 @tool
-def get_menu_events_analytics_tool(store_id: str) -> Dict[str, Any]:
+def get_menu_events_analytics_tool(store_id: str = "") -> Dict[str, Any]:
     """
     Get menu events analytics for a store.
     
-    Args:
-        store_id: Store identifier
+    Note: store_id is automatically provided - you don't need to specify it.
     
     Returns:
         Dictionary with menu events analytics including total_events,

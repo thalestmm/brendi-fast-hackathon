@@ -62,10 +62,15 @@ class Settings(BaseSettings):
     # Data ingestion configuration
     DATA_DIR: Path = Field(default=BASE_DIR.parent / "data")
     STORE_ID: str = Field(default="0WcZ1MWEaFc1VftEBdLa")
-    AUTO_INGEST_DATA: bool = Field(default=True)
+    AUTO_INGEST_DATA: bool = Field(default=False)
 
     # Agent configuration
     AGENT_MESSAGE_HISTORY_LIMIT: int = Field(default=10)
+    
+    # Message buffering configuration
+    MESSAGE_BUFFER_TIMEOUT_SECONDS: int = Field(
+        default=2, description="Wait time in seconds before processing buffered messages"
+    )
 
     model_config = ConfigDict(
         env_file=ENV_FILE,

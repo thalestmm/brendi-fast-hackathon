@@ -23,6 +23,7 @@ from app.graphs.tools.analytics import (
 )
 from app.graphs.tools.rag import search_historical_data
 from app.graphs.nodes.rag import retrieve_rag_context
+from app.graphs.nodes.tools import create_tools_node_dynamic
 
 logger = logging.getLogger(__name__)
 
@@ -47,11 +48,11 @@ Guidelines:
 - Suggest concrete improvements based on data
 - If you don't have enough information, ask clarifying questions
 - Always consider the restaurant's context and constraints
-- ALWAYS include the store_id parameter when calling analytics tools (it will be provided in the context)
+- You can call analytics tools without specifying store_id - it will be automatically provided
 
 When answering questions:
 1. Use RAG search to find relevant historical context
-2. Query analytics tools for current metrics (always include store_id parameter)
+2. Query analytics tools for current metrics (store_id is automatically included)
 3. Synthesize information into actionable insights
 4. Provide clear recommendations
 
@@ -76,15 +77,13 @@ def create_agent_model() -> ChatOpenAI:
 
 
 def create_system_message_with_context(rag_context: str, store_id: str = "") -> SystemMessage:
-    """Create system message with RAG context and store_id injected."""
-    store_section = f"\n\nCurrent Store ID: {store_id}\nIMPORTANT: Always use store_id='{store_id}' when calling analytics tools.\n" if store_id else ""
-    
+    """Create system message with RAG context injected."""
     if rag_context and rag_context.strip() and not rag_context.startswith("Error"):
         context_section = f"\n\nRelevant Context from Restaurant Data:\n{rag_context}\n"
     else:
         context_section = "\n\nNote: No specific context retrieved. Use your general knowledge and available tools.\n"
     
-    full_prompt = SYSTEM_PROMPT + store_section + context_section
+    full_prompt = SYSTEM_PROMPT + context_section
     return SystemMessage(content=full_prompt)
 
 
@@ -141,19 +140,7 @@ def should_continue(state: AgentState) -> str:
     return "end"
 
 
-# Create tools node
-def create_tools_node():
-    """Create the tools execution node."""
-    tools = [
-        calculator_tool,
-        get_order_analytics_tool,
-        get_campaign_analytics_tool,
-        get_consumer_analytics_tool,
-        get_feedback_analytics_tool,
-        get_menu_events_analytics_tool,
-        search_historical_data,
-    ]
-    return ToolNode(tools)
+# Tools node will be created dynamically to inject store_id
 
 
 # Build the graph
@@ -164,7 +151,7 @@ def create_graph() -> StateGraph:
     # Add nodes
     workflow.add_node("retrieve_rag", retrieve_rag_context)
     workflow.add_node("agent", agent_node)
-    workflow.add_node("tools", create_tools_node())
+    workflow.add_node("tools", create_tools_node_dynamic)  # Dynamic node that injects store_id
     
     # Set entry point
     workflow.set_entry_point("retrieve_rag")

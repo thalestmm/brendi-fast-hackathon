@@ -62,6 +62,64 @@ services:
       - DATABASE_URL=${DATABASE_URL}
       - DB_POOL_SIZE=${DB_POOL_SIZE:-5}
       - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-10}
+      
+      # Message buffering configuration
+      - MESSAGE_BUFFER_TIMEOUT_SECONDS=${MESSAGE_BUFFER_TIMEOUT_SECONDS:-2}
+
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: worker
+    volumes:
+      - backend_data:/app/logs
+      - ./backend/data:/data:ro
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    environment:
+      # Environment configuration
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Logging configuration
+      - LOG_FILE_MAX_BYTES=${LOG_FILE_MAX_BYTES:-10485760}
+      - LOG_FILE_BACKUP_COUNT=${LOG_FILE_BACKUP_COUNT:-5}
+      
+      # LLM configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      
+      # LangSmith configuration
+      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT}
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - LANGSMITH_TRACING_V2=${LANGSMITH_TRACING_V2:-true}
+      
+      # Redis configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=${REDIS_DB:-0}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      
+      # RQ configuration
+      - RQ_QUEUE_NAME=${RQ_QUEUE_NAME:-default}
+      
+      # Chroma configuration
+      - CHROMA_HOST=${CHROMA_HOST:-chroma}
+      - CHROMA_PORT=${CHROMA_PORT:-8000}
+      - CHROMA_API_TOKEN=${CHROMA_API_TOKEN:-admin}
+      - CHROMA_COLLECTION_NAME=${CHROMA_COLLECTION_NAME:-rag_data}
+      
+      # PostgreSQL configuration (external database)
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-5}
+      - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-10}
+      
+      # Message buffering configuration
+      - MESSAGE_BUFFER_TIMEOUT_SECONDS=${MESSAGE_BUFFER_TIMEOUT_SECONDS:-2}
+    command: uv run python -m app.workers.worker
+    restart: unless-stopped
   
   chroma:
     image: chromadb/chroma:latest
