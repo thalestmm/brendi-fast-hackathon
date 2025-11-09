@@ -1,0 +1,11 @@
+[project]
+name = "brendi-fast-hackathon-api"
+version = "0.1.0"
+dependencies = [
+    "fastapi>=0.121.1",
+    "gunicorn>=23.0.0",
+    "uvicorn[standard]>=0.32.1",
+    "pydantic>=2.12.4",
+    "pydantic-settings>=2.11.0",
+    "sqlalchemy>=2.0.44",
+]

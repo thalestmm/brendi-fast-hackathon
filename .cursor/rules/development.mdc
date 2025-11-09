@@ -1,0 +1,41 @@
+---
+alwaysApply: true
+---
+
+## Project Description
+
+This a web dashboard for displaying restaurant analytics for internal management, with AI insights and an AI chat app for realtime conversation with the AI agent for helping decision making.
+
+## Tech Stack
+
+Backend: FastAPI
+AI orchestration: Langgraph / Langchain
+Frontend: React (dashboard + chat interface)
+Caching Layer: Redis
+Async Tasks: RedisQueue
+
+
+### Linting
+
+Ruff for python files
+
+## Key Features
+
+### Backend
+
+* Support for realtime conversations in the chat app (websockets maybe?)
+* Containerized deployment from the go with Docker
+* CI/CD with Github Actions
+* Multi-tenant support (chat, rag, everything)
+
+### Frontend
+
+* Make the frontend SIMPLE and FUNCTIONAL. I am not a frontend developer, so there should be only the essential logic
+* Direct communication with the backend via Rest API
+* ShadCN Ui components throughout the whole app for consistency
+* Color palette: #db4542 #000000 #fcfcfc
+* Persistent chat button that opens up a conversation with the AI agent
+* Nicely displayed graphs with the relevant data in the dashboard, divided by pages
+* Each dashboard page should have a "insights" card that will be sent by the backend
+* Containerized deployment from the go with Docker
+* CI/CD with Github Actions
