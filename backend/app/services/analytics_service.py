@@ -72,13 +72,45 @@ async def get_order_analytics(
         .order_by(date_expr)
     )
     daily_result = await session.execute(daily_orders_stmt)
+    daily_rows = daily_result.all()
+
+    # If no recent data and no explicit date range, fall back to entire dataset
+    if not daily_rows and not start_date:
+        range_stmt = (
+            select(func.min(Order.created_at), func.max(Order.created_at))
+            .where(Order.store_id == store_id)
+        )
+        range_result = await session.execute(range_stmt)
+        min_created_at, max_created_at = range_result.one()
+
+        if max_created_at:
+            period_start = min_created_at or max_created_at
+            period_end = max_created_at
+
+            period_filters = list(base_filters)
+            period_filters.append(Order.created_at >= period_start)
+            period_filters.append(Order.created_at <= period_end)
+
+            daily_orders_stmt = (
+                select(
+                    date_expr.label("date"),
+                    func.count(Order.id).label("count"),
+                    func.sum(Order.total_price).label("revenue"),
+                )
+                .where(and_(*period_filters))
+                .group_by(date_expr)
+                .order_by(date_expr)
+            )
+
+            daily_rows = (await session.execute(daily_orders_stmt)).all()
+
     daily_data = [
         {
             "date": row.date.isoformat() if row.date else None,
             "orders": row.count,
             "revenue": int(row.revenue) if row.revenue else 0,
         }
-        for row in daily_result.all()
+        for row in daily_rows
     ]
 
     # Orders by day of week
@@ -211,7 +243,7 @@ async def get_order_analytics(
             "revenue": stats["revenue"],
         }
         for name, stats in sorted(
-            item_totals.items(), key=lambda item: item[1]["revenue"], reverse=True
+            item_totals.items(), key=lambda item: item[1]["orders"], reverse=True
         )[:5]
     ]
 

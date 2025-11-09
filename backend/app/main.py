@@ -2,6 +2,7 @@
 Main entry point for the FastAPI application.
 """
 
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, status
@@ -15,7 +16,7 @@ from app.core.database import check_database_health, AsyncSessionLocal
 from app.middleware.tenant import TenantMiddleware
 from app.services.data_loader import load_all_data
 from app.services.document_compiler import compile_all_documents_for_store
-from app.services.chroma_service import add_documents, delete_collection
+from app.services.chroma_service import add_documents, delete_collection, query_collection
 from app.services.embedding_service import generate_embeddings_batch
 
 
@@ -123,6 +124,34 @@ async def lifespan(app: FastAPI):
             logger.error("Continuing with server startup despite ingestion error")
     else:
         logger.info("Automatic data ingestion is disabled (AUTO_INGEST_DATA=False)")
+
+    async def warmup_ai_insights() -> None:
+        """
+        Prime AI insight dependencies so the first user request doesn't hit cold starts.
+        """
+        if not settings.STORE_ID:
+            logger.warning("Skipping AI warmup because STORE_ID is not configured")
+            return
+
+        loop = asyncio.get_running_loop()
+
+        try:
+            logger.info("Warming up Chroma embeddings for store %s", settings.STORE_ID)
+            await loop.run_in_executor(
+                None,
+                lambda: query_collection(
+                    store_id=settings.STORE_ID,
+                    query_text="warmup",
+                    top_k=1,
+                ),
+            )
+            logger.info("Chroma embedding warmup completed")
+        except Exception as exc:
+            logger.warning(
+                "Skipping Chroma warmup due to error: %s", exc, exc_info=True
+            )
+
+    await warmup_ai_insights()
 
     logger.info("FastAPI backend application started successfully")
 
