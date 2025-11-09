@@ -86,7 +86,9 @@ def create_system_message_with_context(
 
     localize = "IMPORTANT: Always answer in brazilian portuguese."
 
-    date_time = f"The current date and time is {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}."
+    date_time = (
+        f"The current date and time is {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}."
+    )
 
     full_prompt = SYSTEM_PROMPT + context_section + localize + date_time
     return SystemMessage(content=full_prompt)

@@ -204,9 +204,6 @@ async def get_pending_buffers() -> List[Dict[str, Any]]:
                                 store_id, session_id = parts
 
                                 # Get messages
-                                buffer_key = (
-                                    f"{BUFFER_KEY_PREFIX}{store_id}:{session_id}"
-                                )
                                 messages = await get_buffered_messages(
                                     store_id, session_id
                                 )

@@ -4,8 +4,7 @@ Service for interacting with the LangGraph agent.
 
 import logging
 import uuid
-from typing import Dict, Any, List
-from datetime import datetime
+from typing import List
 
 from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
 from typing import TypedDict, Annotated
@@ -104,14 +103,12 @@ async def process_message(
 
         # Invoke the graph without checkpointing
         logger.info(f"Invoking agent graph for session {session_id}")
-        
+
         # Collect all messages from the graph execution
         all_messages = []
         async for event in graph.astream(initial_state):
             for node_name, node_output in event.items():
-                logger.debug(
-                    f"Node {node_name} output: {type(node_output)}"
-                )
+                logger.debug(f"Node {node_name} output: {type(node_output)}")
                 # Collect messages from each node
                 if isinstance(node_output, dict) and "messages" in node_output:
                     all_messages.extend(node_output["messages"])

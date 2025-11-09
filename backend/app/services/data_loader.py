@@ -4,7 +4,7 @@ Data ingestion service for loading JSON files into PostgreSQL.
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Optional
 from uuid import uuid4
@@ -27,20 +27,60 @@ logger = logging.getLogger(__name__)
 
 
 def parse_date(date_obj: Any) -> Optional[datetime]:
-    """Parse date object from JSON (handles _date.iso format)."""
-    if isinstance(date_obj, dict) and date_obj.get("_date"):
-        iso_str = date_obj.get("iso")
+    """Best-effort parse for the variety of timestamp formats in sample data."""
+    if date_obj is None:
+        return None
+
+    # Firestore-style dict with ISO string
+    if isinstance(date_obj, dict):
+        iso_str = date_obj.get("iso") or date_obj.get("ISO")
         if iso_str:
             try:
                 return datetime.fromisoformat(iso_str.replace("Z", "+00:00"))
-            except Exception as e:
-                logger.warning(f"Error parsing date {iso_str}: {e}")
-                return None
-    elif isinstance(date_obj, str):
+            except Exception as exc:
+                logger.warning(f"Error parsing ISO date {iso_str}: {exc}")
+
+        # Firestore timestamp fields
+        if "seconds" in date_obj:
+            seconds = date_obj.get("seconds", 0)
+            nanoseconds = date_obj.get("nanoseconds", 0)
+            try:
+                total_seconds = float(seconds) + float(nanoseconds) / 1_000_000_000
+                return datetime.fromtimestamp(total_seconds, tz=timezone.utc)
+            except Exception as exc:
+                logger.warning(
+                    "Error parsing timestamp seconds/nanoseconds (%s, %s): %s",
+                    seconds,
+                    nanoseconds,
+                    exc,
+                )
+
+        # Recursive check for nested iso strings (e.g., {"_timestamp": true, "value": {...}})
+        for value in date_obj.values():
+            parsed = parse_date(value)
+            if parsed:
+                return parsed
+
+        return None
+
+    # Raw ISO string
+    if isinstance(date_obj, str):
         try:
             return datetime.fromisoformat(date_obj.replace("Z", "+00:00"))
         except Exception:
             pass
+
+    # Numeric timestamp (milliseconds or seconds)
+    if isinstance(date_obj, (int, float)):
+        try:
+            # Treat large numbers as milliseconds since epoch
+            timestamp = float(date_obj)
+            if timestamp > 1e12:
+                timestamp = timestamp / 1000.0
+            return datetime.fromtimestamp(timestamp, tz=timezone.utc)
+        except Exception as exc:
+            logger.warning(f"Error parsing numeric timestamp {date_obj}: {exc}")
+
     return None
 
 
@@ -201,7 +241,7 @@ async def load_orders_data(
 
         for order in batch:
             created_at = parse_date(order.get("createdAt"))
-            
+
             # Default to now if no date found
             if created_at is None:
                 created_at = datetime.now()
