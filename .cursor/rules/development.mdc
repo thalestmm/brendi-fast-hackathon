@@ -4,38 +4,480 @@ alwaysApply: true
 
 ## Project Description
 
-This a web dashboard for displaying restaurant analytics for internal management, with AI insights and an AI chat app for realtime conversation with the AI agent for helping decision making.
+This is a web dashboard for displaying restaurant analytics for internal management, with AI insights and an AI chat app for realtime conversation with an AI agent to help with decision making.
+
+## Core Philosophy
+
+**SIMPLICITY FIRST**: This application prioritizes functional simplicity over complexity. Keep code straightforward, maintainable, and easy to understand. Avoid over-engineering. The user is not a frontend expert, so frontend code should be especially clean and minimal.
 
 ## Tech Stack
 
-Backend: FastAPI
-AI orchestration: Langgraph / Langchain
-Frontend: React (dashboard + chat interface)
-Caching Layer: Redis
-Async Tasks: RedisQueue
+**Backend**: FastAPI
+**AI Orchestration**: Langgraph / Langchain
+**Frontend**: React (dashboard + chat interface)
+**Caching Layer**: Redis
+**Async Tasks**: RedisQueue
+**Linting**: Ruff for Python files
 
+## AI Agent Architecture
 
-### Linting
+### Agent Purpose
+The AI agent assists restaurant managers by:
+- Analyzing business metrics (sales, orders, customer feedback, campaign performance)
+- Providing actionable insights based on data trends
+- Answering questions about restaurant operations in real-time
+- Suggesting optimizations for menu, marketing, and operations
 
-Ruff for python files
+### Agent Capabilities
+- **Context-Aware**: Uses RAG (Retrieval-Augmented Generation) to access restaurant-specific data
+- **Multi-Tenant**: Isolated data and context per restaurant/tenant
+- **Real-Time Communication**: WebSocket support for instant chat responses
+- **Proactive Insights**: Background jobs generate insights that appear on dashboard pages
+- **Tool Usage**: Can perform calculations, query databases, and analyze trends
+
+### Agent Implementation Guidelines
+- Use Langgraph for conversation flow and state management
+- Keep agent prompts clear and focused on restaurant management domain
+- Design tools to be single-purpose and composable
+- Cache frequent queries to improve response time
+- Handle errors gracefully with user-friendly messages
+- Log all agent interactions for debugging and improvement
+
+## Data Architecture
+
+### Available Data Sources
+The `/data` directory contains sample restaurant data:
+- `store.json` - Restaurant information and configuration
+- `orders.json` - Order history and transaction data
+- `menu_events_last_30_days.json` - Menu item performance
+- `campaigns.json` / `campaigns_results.json` - Marketing campaign data
+- `feedbacks.json` - Customer feedback
+- `store_consumers.json` / `store_consumer_preferences.json` - Customer profiles
+
+### Data Handling Principles
+- Treat all data as tenant-scoped (multi-tenant from the start)
+- Use efficient querying patterns (leverage Redis for caching)
+- Sanitize and validate all inputs
+- Keep data transformations simple and testable
 
 ## Key Features
 
 ### Backend
 
-* Support for realtime conversations in the chat app (websockets maybe?)
-* Containerized deployment from the go with Docker
-* CI/CD with Github Actions
-* Multi-tenant support (chat, rag, everything)
+#### API Design
+- RESTful endpoints for CRUD operations
+- WebSocket endpoint for real-time chat
+- Clear API versioning (v1, v2, etc.)
+- Consistent response formats (success/error structures)
+- Proper HTTP status codes
+
+#### Code Structure
+- **Routers**: Group endpoints logically (e.g., `/api/v1/analytics`, `/api/v1/chat`)
+- **Schemas**: Use Pydantic models for request/response validation
+- **Services**: Business logic separated from route handlers
+- **Models**: Database models separate from API schemas
+- **Jobs**: Background tasks for insights generation
+- **Workers**: RedisQueue workers for async processing
+
+#### Key Backend Features
+- Real-time conversation support via WebSockets
+- Multi-tenant support (chat, RAG, data isolation)
+- Containerized with Docker from the start
+- Environment-based configuration (use `.env` files)
+- Structured logging with proper levels
+- Error handling with meaningful messages
+- CI/CD with GitHub Actions
+
+#### Testing & Quality
+- Write simple, focused tests for critical paths
+- Use Ruff for linting and formatting
+- Validate API inputs/outputs with Pydantic
+- Log errors with context for debugging
 
 ### Frontend
 
-* Make the frontend SIMPLE and FUNCTIONAL. I am not a frontend developer, so there should be only the essential logic
-* Direct communication with the backend via Rest API
-* ShadCN Ui components throughout the whole app for consistency
-* Color palette: #db4542 #000000 #fcfcfc
-* Persistent chat button that opens up a conversation with the AI agent
-* Nicely displayed graphs with the relevant data in the dashboard, divided by pages
-* Each dashboard page should have a "insights" card that will be sent by the backend
-* Containerized deployment from the go with Docker
-* CI/CD with Github Actions
+#### Design Principles
+- **SIMPLE and FUNCTIONAL**: Minimal logic, maximum clarity
+- **No complex state management**: Use React hooks and simple patterns
+- **Component-focused**: Small, reusable components
+- **Consistent UI**: ShadCN UI components throughout
+
+#### Color Palette
+- Primary Red: `#db4542`
+- Black: `#000000`
+- Off-White: `#fcfcfc`
+
+#### Key Frontend Features
+- **Dashboard Pages**: Multiple pages for different analytics views
+  - Each page shows relevant charts/graphs
+  - Each page has an "Insights" card with AI-generated insights
+- **Persistent Chat Button**: Fixed position button that opens AI chat interface
+- **Direct API Communication**: Simple fetch/axios calls to backend REST API
+- **Real-time Chat**: WebSocket connection for instant AI responses
+- **Responsive Design**: Works on desktop and tablet (mobile optional)
+- **Loading States**: Clear feedback when data is loading
+- **Error Handling**: User-friendly error messages
+
+#### Frontend Code Style
+- Functional components with hooks
+- Props typing with TypeScript (if used) or PropTypes
+- Keep components under 200 lines when possible
+- Extract complex logic to custom hooks
+- Use meaningful variable names
+- Avoid deep nesting
+
+### Deployment & DevOps
+
+#### Containerization
+- Backend: Dockerfile with multi-stage build
+- Frontend: Dockerfile with optimized build
+- Docker Compose for local development
+- Include health checks in containers
+
+#### Environment Management
+- Use `.env` files for configuration
+- Never commit secrets to git
+- Document all required environment variables in `env.example`
+- Validate required env vars on startup
+
+#### CI/CD
+- GitHub Actions for automated testing and deployment
+- Lint checks on every PR
+- Build and test before merge
+- Keep CI pipeline fast and simple
+
+## Design Patterns & Architecture
+
+### Core Architectural Principles
+- **Separation of Concerns**: Keep routers, services, models, and schemas separate
+- **Dependency Injection**: Use FastAPI's DI system for loose coupling and testability
+- **Single Responsibility**: Each class/function should do one thing well
+- **DRY (Don't Repeat Yourself)**: Extract common logic into reusable components
+- **YAGNI (You Aren't Gonna Need It)**: Don't build features until they're needed
+
+### Recommended Design Patterns
+
+#### 1. Dependency Injection (FastAPI Built-in)
+Use FastAPI's dependency injection system for services, database connections, and configuration.
+
+```python
+# app/core/dependencies.py
+from fastapi import Depends
+from typing import Annotated
+
+async def get_redis_client():
+    """Dependency that provides Redis client."""
+    client = await redis.get_client()
+    try:
+        yield client
+    finally:
+        # Cleanup if needed
+        pass
+
+async def get_analytics_service(
+    redis: Annotated[Redis, Depends(get_redis_client)]
+) -> AnalyticsService:
+    """Dependency that provides AnalyticsService."""
+    return AnalyticsService(redis_client=redis)
+
+# Usage in router
+@router.get("/analytics/sales")
+async def get_sales(
+    service: Annotated[AnalyticsService, Depends(get_analytics_service)]
+):
+    return await service.get_sales_data()
+```
+
+**Benefits**: Easy to test (mock dependencies), loose coupling, clear dependencies
+
+#### 2. Singleton Pattern (For Shared Resources)
+Use singletons for resources that should be shared across the application.
+
+**Use For**: Database connections, Redis clients, configuration objects, loggers
+
+**Avoid For**: Business logic, stateful services (unless carefully designed)
+
+#### 3. Repository Pattern (Data Access Layer)
+Isolate data access logic from business logic.
+
+**Benefits**: Testable (mock repository), swappable data sources, clear separation
+
+#### 4. Service Layer Pattern (Business Logic)
+Keep business logic in service classes, separate from HTTP handlers.
+
+**Benefits**: Testable, reusable across endpoints, keeps routers thin
+
+#### 5. Factory Pattern (Complex Object Creation)
+Use factories when object creation logic is complex or varies based on input.
+
+**Use For**: Complex object creation, configuration-based instantiation
+
+#### 6. Strategy Pattern (Interchangeable Algorithms)
+Use when you have multiple ways to accomplish the same task.
+
+```python
+# app/services/insights/strategies.py
+from abc import ABC, abstractmethod
+
+class InsightStrategy(ABC):
+    """Base class for insight generation strategies."""
+    
+    @abstractmethod
+    async def generate(self, data: dict) -> str:
+        pass
+
+class SalesInsightStrategy(InsightStrategy):
+    """Generate insights from sales data."""
+    
+    async def generate(self, data: dict) -> str:
+        # Sales-specific insight logic
+        return f"Sales increased by {data['growth']}%"
+
+class FeedbackInsightStrategy(InsightStrategy):
+    """Generate insights from customer feedback."""
+    
+    async def generate(self, data: dict) -> str:
+        # Feedback-specific insight logic
+        return f"Customer satisfaction: {data['score']}/5"
+
+# app/services/insights_service.py
+class InsightsService:
+    def __init__(self):
+        self.strategies = {
+            "sales": SalesInsightStrategy(),
+            "feedback": FeedbackInsightStrategy(),
+        }
+    
+    async def generate_insight(self, insight_type: str, data: dict):
+        strategy = self.strategies.get(insight_type)
+        if not strategy:
+            raise ValueError(f"Unknown insight type: {insight_type}")
+        return await strategy.generate(data)
+```
+
+**Use For**: Different algorithms, configurable behavior, A/B testing
+
+#### 7. Observer Pattern (Event-Driven Architecture)
+Use for decoupled event handling and notifications.
+
+```python
+# app/core/events.py
+from typing import Callable, Dict, List
+
+class EventBus:
+    """Simple event bus for decoupled event handling."""
+    
+    def __init__(self):
+        self._subscribers: Dict[str, List[Callable]] = {}
+    
+    def subscribe(self, event_type: str, handler: Callable):
+        """Subscribe to an event type."""
+        if event_type not in self._subscribers:
+            self._subscribers[event_type] = []
+        self._subscribers[event_type].append(handler)
+    
+    async def publish(self, event_type: str, data: dict):
+        """Publish an event to all subscribers."""
+        if event_type in self._subscribers:
+            for handler in self._subscribers[event_type]:
+                await handler(data)
+
+# Usage
+event_bus = EventBus()
+
+# Subscribe to events
+async def on_order_created(data: dict):
+    logger.info(f"Order created: {data['order_id']}")
+    # Trigger analytics update
+    await analytics_service.update_metrics(data)
+
+event_bus.subscribe("order.created", on_order_created)
+
+# Publish events
+await event_bus.publish("order.created", {"order_id": "123", "tenant_id": "abc"})
+```
+
+**Use For**: Event notifications, async workflows, decoupled systems
+
+### Pattern Selection Guidelines
+
+| Pattern | When to Use | When to Avoid |
+|---------|-------------|---------------|
+| **Dependency Injection** | Always in FastAPI | N/A - Use it |
+| **Singleton** | Shared resources (DB, Redis, Config) | Business logic, stateful services |
+| **Repository** | Data access with DB/external APIs | Simple CRUD with no abstraction needed |
+| **Service Layer** | Business logic, reusable operations | Simple pass-through to DB |
+| **Factory** | Complex object creation | Simple object instantiation |
+| **Strategy** | Multiple algorithms for same task | Single implementation |
+| **Observer** | Event-driven, decoupled notifications | Simple synchronous calls |
+
+### Anti-Patterns to Avoid
+
+1. **God Objects**: Classes that do too much - break them down
+2. **Circular Dependencies**: A depends on B, B depends on A - redesign
+3. **Global State**: Avoid module-level mutable state - use DI instead
+4. **Tight Coupling**: Services directly importing other services - use DI
+5. **Over-Engineering**: Don't use patterns "just because" - use when needed
+
+### Frontend Patterns (React)
+
+#### Custom Hooks Pattern
+Extract reusable logic into custom hooks.
+
+```jsx
+// hooks/useAnalytics.js
+function useAnalytics(tenantId) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchAnalytics(tenantId)
+      .then(setData)
+      .catch(setError)
+      .finally(() => setLoading(false));
+  }, [tenantId]);
+
+  return { data, loading, error };
+}
+
+// Usage in component
+function Dashboard() {
+  const { data, loading, error } = useAnalytics("tenant-123");
+  if (loading) return <Spinner />;
+  if (error) return <Error message={error} />;
+  return <Chart data={data} />;
+}
+```
+
+#### Composition Pattern
+Build complex UIs from simple, reusable components.
+
+```jsx
+// Small, focused components
+function Card({ children, title }) {
+  return (
+    <div className="card">
+      <h3>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function Metric({ label, value }) {
+  return (
+    <div className="metric">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+// Compose into larger component
+function MetricsCard({ title, metrics }) {
+  return (
+    <Card title={title}>
+      {metrics.map(m => (
+        <Metric key={m.label} label={m.label} value={m.value} />
+      ))}
+    </Card>
+  );
+}
+```
+
+## Development Guidelines
+
+### When Writing Code
+1. **Start simple**: Don't add features that aren't needed yet
+2. **Be explicit**: Prefer clarity over cleverness
+3. **Handle errors**: Every external call should have error handling
+4. **Log appropriately**: Use structured logging for debugging
+5. **Comment wisely**: Explain *why*, not *what*
+6. **Test critical paths**: Focus on business logic and integrations
+7. **Use patterns purposefully**: Apply design patterns when they solve real problems
+
+### When Using AI Features
+1. **Design for observability**: Log agent decisions and tool usage
+2. **Set timeouts**: Don't let agent calls hang indefinitely
+3. **Provide fallbacks**: Have default responses if AI fails
+4. **Monitor costs**: Track API usage for LLM calls
+5. **Version prompts**: Keep agent prompts in version control
+
+### When Building UI
+1. **Mobile-first (optional)**: Desktop is primary, but be responsive
+2. **Accessibility**: Use semantic HTML and proper labels
+3. **Performance**: Lazy load data, virtualize large lists if needed
+4. **Consistency**: Use design system (ShadCN) components
+5. **User feedback**: Loading states, success/error messages
+
+## Project Structure Conventions
+
+```
+backend/
+├── app/
+│   ├── core/          # Configuration, database, Redis, logging
+│   ├── routers/       # API endpoints (organized by version)
+│   ├── schemas/       # Pydantic models for API
+│   ├── models/        # Database models
+│   ├── services/      # Business logic
+│   ├── graphs/        # Langgraph agent definitions
+│   ├── jobs/          # Background tasks
+│   ├── workers/       # RedisQueue workers
+│   └── main.py        # FastAPI application entry point
+
+frontend/
+├── src/
+│   ├── components/    # Reusable UI components
+│   ├── pages/         # Page-level components
+│   ├── services/      # API communication layer
+│   └── utils/         # Helper functions
+
+data/                  # Sample restaurant data for development
+```
+
+## Common Patterns
+
+### Backend Endpoint Pattern
+```python
+@router.get("/analytics/sales", response_model=SalesResponse)
+async def get_sales_analytics(
+    tenant_id: str = Header(...),
+    period: str = Query("30d")
+) -> SalesResponse:
+    """Clear, descriptive docstring."""
+    try:
+        # Simple, readable logic
+        data = await analytics_service.get_sales(tenant_id, period)
+        return SalesResponse(data=data)
+    except Exception as e:
+        logger.error(f"Error fetching sales: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch sales data")
+```
+
+### Frontend Component Pattern
+```jsx
+function SalesDashboard() {
+  const [sales, setSales] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    fetchSalesData()
+      .then(data => setSales(data))
+      .catch(err => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorMessage message={error} />;
+  return <SalesChart data={sales} />;
+}
+```
+
+## Remember
+
+- **Simplicity beats complexity**
+- **Working code beats perfect code**
+- **Clear errors beat silent failures**
+- **Good enough today beats perfect tomorrow**
+- **Readable code beats clever code**

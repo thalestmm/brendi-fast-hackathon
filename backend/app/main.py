@@ -12,6 +12,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.core.logging_config import setup_logging
+from app.core.database import check_database_health, AsyncSessionLocal
+from app.middleware.tenant import TenantMiddleware
+from app.services.data_loader import load_all_data
+from app.services.document_compiler import compile_all_documents_for_store
+from app.services.chroma_service import add_documents, delete_collection
+from app.services.embedding_service import generate_embeddings_batch
 
 
 logger = setup_logging(
@@ -21,6 +27,7 @@ logger = setup_logging(
     max_bytes=settings.LOG_FILE_MAX_BYTES,
     backup_count=settings.LOG_FILE_BACKUP_COUNT,
 )
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +45,75 @@ async def lifespan(app: FastAPI):
             logger.info(f"{key}: {value}")
         logger.info("=" * 80)
 
+    # Data ingestion on startup
+    if settings.AUTO_INGEST_DATA:
+        try:
+            if settings.DATA_DIR.exists():
+                logger.info("=" * 80)
+                logger.info("Starting automatic data ingestion...")
+                logger.info(f"Data directory: {settings.DATA_DIR}")
+                logger.info(f"Store ID: {settings.STORE_ID}")
+                logger.info("=" * 80)
+
+                async with AsyncSessionLocal() as session:
+                    # Load data into PostgreSQL
+                    logger.info("Loading data into PostgreSQL...")
+                    results = await load_all_data(
+                        session, settings.DATA_DIR, settings.STORE_ID, skip_chroma=True
+                    )
+
+                    logger.info("Data loading summary:")
+                    for data_type, count in results.items():
+                        logger.info(f"  {data_type}: {count} records")
+
+                    # Compile documents for Chroma
+                    logger.info("Compiling documents for Chroma...")
+                    try:
+                        delete_collection(settings.STORE_ID)
+                        logger.info(
+                            f"Deleted existing collection for store {settings.STORE_ID}"
+                        )
+                    except Exception:
+                        logger.debug("Collection may not exist")
+
+                    documents = await compile_all_documents_for_store(
+                        session, settings.STORE_ID
+                    )
+
+                    if documents:
+                        texts = [doc["text"] for doc in documents]
+                        metadatas = [doc["metadata"] for doc in documents]
+                        ids = [
+                            f"{doc['metadata']['content_type']}_{doc['metadata']['content_id']}"
+                            for doc in documents
+                        ]
+
+                        logger.info("Generating embeddings...")
+                        embeddings = generate_embeddings_batch(texts, batch_size=100)
+
+                        logger.info("Adding documents to Chroma...")
+                        add_documents(
+                            store_id=settings.STORE_ID,
+                            documents=texts,
+                            embeddings=embeddings,
+                            metadatas=metadatas,
+                            ids=ids,
+                        )
+                        logger.info(
+                            f"Successfully added {len(documents)} documents to Chroma"
+                        )
+
+                logger.info("=" * 80)
+                logger.info("Data ingestion completed successfully")
+                logger.info("=" * 80)
+            else:
+                logger.warning(f"Data directory does not exist: {settings.DATA_DIR}")
+                logger.warning("Skipping automatic data ingestion")
+        except Exception as e:
+            logger.error(f"Error during data ingestion: {e}", exc_info=True)
+            logger.error("Continuing with server startup despite ingestion error")
+    else:
+        logger.info("Automatic data ingestion is disabled (AUTO_INGEST_DATA=False)")
 
     logger.info("FastAPI backend application started successfully")
 
@@ -47,7 +123,8 @@ async def lifespan(app: FastAPI):
     logger.info("Stopping FastAPI backend application")
     logger.info("=" * 80)
 
-app : FastAPI = FastAPI(
+
+app: FastAPI = FastAPI(
     title="Brendi Fast Hackathon",
     description="Backend for the Brendi Fast Hackathon",
     version="0.1.0",
@@ -64,9 +141,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from app.routers import router as main_router # noqa: E402
+# Add tenant middleware
+app.add_middleware(TenantMiddleware)
+
+from app.routers import router as main_router  # noqa: E402
 
 app.include_router(main_router)
+
 
 @app.get("/")
 async def root():
@@ -75,12 +156,29 @@ async def root():
     """
     if settings.ENVIRONMENT != "production":
         return RedirectResponse(url="/docs")
-    return JSONResponse(content={"message": "Brendi Fast Hackathon API", "status": "ok"}, status_code=status.HTTP_200_OK)
+    return JSONResponse(
+        content={"message": "Brendi Fast Hackathon API", "status": "ok"},
+        status_code=status.HTTP_200_OK,
+    )
+
 
 @app.get("/health")
 async def health():
     """
     Health check endpoint for the FastAPI application.
     """
-    # TODO: Add health check as kubernetes liveness probe
-    return JSONResponse(content={"message": "Brendi Fast Hackathon API is healthy", "status": "ok"}, status_code=status.HTTP_200_OK)
+    db_healthy = await check_database_health()
+
+    health_status = {
+        "status": "ok" if db_healthy else "degraded",
+        "database": "healthy" if db_healthy else "unhealthy",
+        "message": "Brendi Fast Hackathon API is healthy"
+        if db_healthy
+        else "Database connection failed",
+    }
+
+    status_code = (
+        status.HTTP_200_OK if db_healthy else status.HTTP_503_SERVICE_UNAVAILABLE
+    )
+
+    return JSONResponse(content=health_status, status_code=status_code)

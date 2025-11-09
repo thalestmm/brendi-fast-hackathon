@@ -23,8 +23,63 @@ services:
     volumes:
       - backend_data:/app/logs
     depends_on:
-      - redis
+      redis:
+        condition: service_healthy
+    environment:
+      # Environment configuration
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      
+      # Logging configuration
+      - LOG_FILE_MAX_BYTES=${LOG_FILE_MAX_BYTES:-10485760}
+      - LOG_FILE_BACKUP_COUNT=${LOG_FILE_BACKUP_COUNT:-5}
+      
+      # LLM configuration
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      
+      # LangSmith configuration
+      - LANGSMITH_PROJECT=${LANGSMITH_PROJECT}
+      - LANGSMITH_API_KEY=${LANGSMITH_API_KEY}
+      - LANGSMITH_TRACING_V2=${LANGSMITH_TRACING_V2:-true}
+      
+      # Redis configuration
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=${REDIS_DB:-0}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      
+      # RQ configuration
+      - RQ_QUEUE_NAME=${RQ_QUEUE_NAME:-default}
+      
+      # Chroma configuration
+      - CHROMA_HOST=${CHROMA_HOST:-chroma}
+      - CHROMA_PORT=${CHROMA_PORT:-8000}
+      - CHROMA_API_TOKEN=${CHROMA_API_TOKEN:-admin}
+      - CHROMA_COLLECTION_NAME=${CHROMA_COLLECTION_NAME:-rag_data}
+      
+      # PostgreSQL configuration (must be provided via environment variable)
+      - DATABASE_URL=${DATABASE_URL}
+      - DB_POOL_SIZE=${DB_POOL_SIZE:-5}
+      - DB_MAX_OVERFLOW=${DB_MAX_OVERFLOW:-10}
+  
+  chroma:
+    image: chromadb/chroma:latest
+    container_name: chroma
+    ports:
+      - 8001:8000
+    volumes:
+      - chroma_data:/data
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    healthcheck:
+      test: ["CMD", "/bin/bash", "-c", "cat < dev/null > /dev/tcp/localhost/8000"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
 volumes:
   redis_data:
   backend_data:
+  chroma_data:

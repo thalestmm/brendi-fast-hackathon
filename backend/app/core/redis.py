@@ -30,10 +30,10 @@ def get_redis_connection() -> aioredis.Redis:
             port=settings.REDIS_PORT,
             db=settings.REDIS_DB,
             password=settings.REDIS_PASSWORD,
-            decode_responses=False, # Binary data for RQ
-            health_check_interval=30, # 30 seconds
+            decode_responses=False,  # Binary data for RQ
+            health_check_interval=30,  # 30 seconds
         )
-    
+
     # Test connection
     try:
         _redis_sync_connection.ping()
@@ -43,6 +43,7 @@ def get_redis_connection() -> aioredis.Redis:
         raise
 
     return _redis_sync_connection
+
 
 def get_async_redis_connection() -> aioredis.AsyncRedis:
     """
@@ -56,10 +57,10 @@ def get_async_redis_connection() -> aioredis.AsyncRedis:
             port=settings.REDIS_PORT,
             db=settings.REDIS_DB,
             password=settings.REDIS_PASSWORD,
-            decode_responses=True, # Decode responses to directly parse inside API
-            health_check_interval=30, # 30 seconds
+            decode_responses=True,  # Decode responses to directly parse inside API
+            health_check_interval=30,  # 30 seconds
         )
-    
+
     # Test connection
     try:
         _redis_async_connection.ping()
@@ -69,6 +70,7 @@ def get_async_redis_connection() -> aioredis.AsyncRedis:
         raise
 
     return _redis_async_connection
+
 
 def get_queue(queue_name: Optional[str] = None) -> Queue:
     """
@@ -87,6 +89,7 @@ def get_queue(queue_name: Optional[str] = None) -> Queue:
 
     redis_conn = get_redis_connection()
     return Queue(queue_name, connection=redis_conn)
+
 
 def enqueue_job(
     func: Callable[..., Any], queue_name: Optional[str] = None, *args, **kwargs
@@ -110,5 +113,6 @@ def enqueue_job(
     queue = get_queue(queue_name)
     logger.debug(f"Enqueuing job: {func.__name__} to queue: {queue_name}")
     return queue.enqueue(func, *args, **kwargs)
+
 
 __all__ = ["get_redis_client", "get_async_redis_client"]

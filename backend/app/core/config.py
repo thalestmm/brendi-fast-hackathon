@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 ENV_FILE = BASE_DIR / ".env"
 
+
 class Settings(BaseSettings):
     """
     Central application settings with layered environment support.
@@ -45,12 +46,31 @@ class Settings(BaseSettings):
     # RQ configuration
     RQ_QUEUE_NAME: str = Field(default="default")
 
+    # ChromaDB Configuration
+    CHROMA_HOST: Optional[str] = Field(default="chroma")
+    CHROMA_PORT: Optional[int] = Field(default=8000)
+    CHROMA_API_TOKEN: Optional[str] = Field(default="admin")
+    CHROMA_COLLECTION_NAME: Optional[str] = Field(default="rag_data")
+
+    # PostgreSQL configuration
+    DATABASE_URL: str = Field(
+        default="postgresql+asyncpg://postgres:postgres@localhost:5432/brendi_db"
+    )
+    DB_POOL_SIZE: int = Field(default=5)
+    DB_MAX_OVERFLOW: int = Field(default=10)
+
+    # Data ingestion configuration
+    DATA_DIR: Path = Field(default=BASE_DIR.parent / "data")
+    STORE_ID: str = Field(default="0WcZ1MWEaFc1VftEBdLa")
+    AUTO_INGEST_DATA: bool = Field(default=True)
+
     model_config = ConfigDict(
         env_file=ENV_FILE,
         env_file_encoding="utf-8",
         extra="ignore",
         case_sensitive=False,
     )
+
 
 settings = Settings()
 
